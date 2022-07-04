@@ -9,5 +9,6 @@ These are items planned for this repo. They may be completed in any order.
  - JavaDocs for JNewton
  - Release version of JNewton  
  
- **License**
-There is no license for this library right now. Any user is free to clone/fork this repo and to use/modify the code within it.
+ **License**  
+   
+ There is no license for this library right now. Any user is free to clone/fork this repo and to use/modify the code within it.
