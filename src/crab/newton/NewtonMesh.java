@@ -83,38 +83,53 @@ public class NewtonMesh {
 		Newton_h.NewtonMeshFlipWinding(address);
 	}
 	
-	public void applyTransform(float[] transform, SegmentAllocator allocator) {
-		MemorySegment matrix = allocator.allocateArray(Newton_h.C_FLOAT, transform);
-		Newton_h.NewtonMeshApplyTransform(address, matrix);
+	public void applyTransform(float[] transform) {
+		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
+			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
+			MemorySegment matrix = allocator.allocateArray(Newton_h.C_FLOAT, transform);
+			Newton_h.NewtonMeshApplyTransform(address, matrix);
+		}
 	}
 	
-	public float[] calculateOOBB(SegmentAllocator allocator) {
-		MemorySegment oobb = allocator.allocateArray(Newton_h.C_FLOAT, Newton.MAT4F_VEC3F);
-		Newton_h.NewtonMeshCalculateOOBB(address, 
-				oobb.asSlice(0L, Newton_h.C_FLOAT.byteSize() * 16), 
-				oobb.asSlice(64L, Newton_h.C_FLOAT.byteSize()), 
-				oobb.asSlice(70L, Newton_h.C_FLOAT.byteSize()), 
-				oobb.asSlice(74L, Newton_h.C_FLOAT.byteSize()));
-		return oobb.toArray(Newton_h.C_FLOAT);
+	public float[] calculateOOBB() {
+		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
+			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
+			MemorySegment oobb = allocator.allocateArray(Newton_h.C_FLOAT, Newton.MAT4F_VEC3F);
+			Newton_h.NewtonMeshCalculateOOBB(address, 
+					oobb.asSlice(0L, Newton_h.C_FLOAT.byteSize() * 16), 
+					oobb.asSlice(64L, Newton_h.C_FLOAT.byteSize()), 
+					oobb.asSlice(70L, Newton_h.C_FLOAT.byteSize()), 
+					oobb.asSlice(74L, Newton_h.C_FLOAT.byteSize()));
+			return oobb.toArray(Newton_h.C_FLOAT);
+		}
 	}
 	
 	public void calculateVertexNormals(float angleInRadians) {
 		Newton_h.NewtonMeshCalculateVertexNormals(address, angleInRadians);
 	}
 	
-	public void applySphericalMapping(int material, float[] alignMatrix, SegmentAllocator allocator) {
-		MemorySegment matrix = allocator.allocateArray(Newton_h.C_FLOAT, alignMatrix);
-		Newton_h.NewtonMeshApplySphericalMapping(address, material, matrix);
+	public void applySphericalMapping(int material, float[] alignMatrix) {
+		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
+			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
+			MemorySegment matrix = allocator.allocateArray(Newton_h.C_FLOAT, alignMatrix);
+			Newton_h.NewtonMeshApplySphericalMapping(address, material, matrix);
+		}
 	}
 	
-	public void applyCylindricalMapping(int cylinderMaterial, int capMaterial, float[] alignMatrix, SegmentAllocator allocator) {
-		MemorySegment matrix = allocator.allocateArray(Newton_h.C_FLOAT, alignMatrix);
-		Newton_h.NewtonMeshApplyCylindricalMapping(address, cylinderMaterial, capMaterial, matrix);
+	public void applyCylindricalMapping(int cylinderMaterial, int capMaterial, float[] alignMatrix) {
+		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
+			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
+			MemorySegment matrix = allocator.allocateArray(Newton_h.C_FLOAT, alignMatrix);
+			Newton_h.NewtonMeshApplyCylindricalMapping(address, cylinderMaterial, capMaterial, matrix);
+		}
 	}
 	
-	public void applyBoxMapping(int frontMaterial, int sideMaterial, int topMaterial, float[] alignMatrix, SegmentAllocator allocator) {
-		MemorySegment matrix = allocator.allocateArray(Newton_h.C_FLOAT, alignMatrix);
-		Newton_h.NewtonMeshApplyBoxMapping(address, frontMaterial, sideMaterial, topMaterial, matrix);
+	public void applyBoxMapping(int frontMaterial, int sideMaterial, int topMaterial, float[] alignMatrix) {
+		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
+			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
+			MemorySegment matrix = allocator.allocateArray(Newton_h.C_FLOAT, alignMatrix);
+			Newton_h.NewtonMeshApplyBoxMapping(address, frontMaterial, sideMaterial, topMaterial, matrix);
+		}
 	}
 	
 	public void applyAngleBasedMapping(int material, NewtonReportProgress reportPrograssCallback, Addressable reportPrgressUserData, float[] alignMatrix, ResourceScope scope) {
