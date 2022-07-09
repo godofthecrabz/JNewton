@@ -4,7 +4,7 @@ import crab.newton.generated.Newton_h;
 
 import jdk.incubator.foreign.*;
 
-public class NewtonAsymetricDynamicBody implements NewtonBody {
+public final class NewtonAsymetricDynamicBody implements NewtonBody {
 	
 	private final MemoryAddress address;
 

@@ -4,7 +4,7 @@ import crab.newton.generated.Newton_h;
 
 import jdk.incubator.foreign.*;
 
-public class NewtonSphere implements NewtonCollision {
+public final class NewtonSphere implements NewtonCollision {
 	
 	private final MemoryAddress address;
 	

@@ -4,7 +4,9 @@ import crab.newton.generated.Newton_h;
 
 import jdk.incubator.foreign.*;
 
-public interface NewtonCollision {
+public sealed interface NewtonCollision permits NewtonBox, NewtonCapsule, NewtonChamferCylinder, 
+	NewtonCompoundCollision, NewtonCone, NewtonConvexHull, NewtonCylinder, NewtonHeightField, 
+	NewtonNull, NewtonSceneCollision, NewtonSphere, NewtonTreeCollision {
 	
 	MemoryAddress address();
 	

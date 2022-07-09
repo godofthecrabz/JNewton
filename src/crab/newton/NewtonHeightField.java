@@ -7,7 +7,7 @@ import crab.newton.generated.*;
 
 import jdk.incubator.foreign.*;
 
-public class NewtonHeightField implements NewtonCollision {
+public final class NewtonHeightField implements NewtonCollision {
 	
 	private final MemoryAddress address;
 	

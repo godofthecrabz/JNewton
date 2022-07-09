@@ -133,10 +133,12 @@ public class NewtonMesh {
 	}
 	
 	public void applyAngleBasedMapping(int material, NewtonReportProgress reportPrograssCallback, Addressable reportPrgressUserData, float[] alignMatrix, ResourceScope scope) {
-		NativeSymbol callback = NewtonReportProgress.allocate(reportPrograssCallback, scope);
-		SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-		MemorySegment matrix = allocator.allocateArray(Newton_h.C_FLOAT, alignMatrix);
-		Newton_h.NewtonMeshApplyAngleBasedMapping(address, material, callback, reportPrgressUserData, matrix);
+		try (ResourceScope localScope = ResourceScope.newConfinedScope()) {
+			NativeSymbol callback = NewtonReportProgress.allocate(reportPrograssCallback, scope);
+			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(localScope);
+			MemorySegment matrix = allocator.allocateArray(Newton_h.C_FLOAT, alignMatrix);
+			Newton_h.NewtonMeshApplyAngleBasedMapping(address, material, callback, reportPrgressUserData, matrix);
+		}
 	}
 	
 	public void createTetrahedraLinearBlendSkinWeightsChannel(NewtonMesh skinMesh) {

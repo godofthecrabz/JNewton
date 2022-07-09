@@ -5,7 +5,7 @@ import crab.newton.generated.*;
 
 import jdk.incubator.foreign.*;
 
-public interface NewtonBody {
+public sealed interface NewtonBody permits NewtonAsymetricDynamicBody, NewtonKinematicBody, NewtonDynamicBody {
 	
 	/**
 	 * Gets the address of the NewtonBody
