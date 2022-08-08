@@ -11,4 +11,4 @@ These are items planned for this repo. They may be completed in any order.
  
  ## License  
    
- There is no license for this library right now. Any user is free to clone/fork this repo and to use/modify the code within it.
+ This repository is licensed on the MIT license. Please read LICENSE file for further detail about the licensing.
