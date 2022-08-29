@@ -1,6 +1,6 @@
 package crab.newton;
 
-import crab.newton.generated.RuntimeHelper;
+import crab.newton.internal.RuntimeHelper;
 
 public class Newton {
 	

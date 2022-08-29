@@ -1,7 +1,8 @@
 package crab.newton;
 
-import crab.newton.generated.*;
-
+import crab.newton.callbacks.NewtonCollisionTreeRayCastCallback;
+import crab.newton.callbacks.NewtonTreeCollisionFaceCallback;
+import crab.newton.internal.*;
 import jdk.incubator.foreign.*;
 
 public final class NewtonTreeCollision implements NewtonCollision {

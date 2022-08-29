@@ -1,8 +1,10 @@
 package crab.newton;
 
 
-import crab.newton.generated.*;
-
+import crab.newton.callbacks.NewtonApplyForceAndTorque;
+import crab.newton.callbacks.NewtonBodyDestructor;
+import crab.newton.callbacks.NewtonSetTransform;
+import crab.newton.internal.*;
 import jdk.incubator.foreign.*;
 
 public sealed interface NewtonBody permits NewtonAsymetricDynamicBody, NewtonKinematicBody, NewtonDynamicBody {

@@ -1,7 +1,6 @@
 package crab.newton;
 
-import crab.newton.generated.Newton_h;
-
+import crab.newton.internal.Newton_h;
 import jdk.incubator.foreign.*;
 
 public final class NewtonCompoundCollision implements NewtonCollision {

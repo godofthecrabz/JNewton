@@ -1,8 +1,35 @@
 package crab.newton;
 
+import crab.newton.callbacks.NewtonAllocMemory;
+import crab.newton.callbacks.NewtonBodyIterator;
+import crab.newton.callbacks.NewtonCollisionCopyConstructionCallback;
+import crab.newton.callbacks.NewtonCollisionDestructorCallback;
+import crab.newton.callbacks.NewtonContactsProcess;
+import crab.newton.callbacks.NewtonCreateContactCallback;
+import crab.newton.callbacks.NewtonDeserializeCallback;
+import crab.newton.callbacks.NewtonDestroyContactCallback;
+import crab.newton.callbacks.NewtonFreeMemory;
+import crab.newton.callbacks.NewtonIslandUpdate;
+import crab.newton.callbacks.NewtonJobTask;
+import crab.newton.callbacks.NewtonJointIterator;
+import crab.newton.callbacks.NewtonOnAABBOverlap;
+import crab.newton.callbacks.NewtonOnBodyDeserializationCallback;
+import crab.newton.callbacks.NewtonOnBodySerializationCallback;
+import crab.newton.callbacks.NewtonOnCompoundSubCollisionAABBOverlap;
+import crab.newton.callbacks.NewtonOnContactGeneration;
+import crab.newton.callbacks.NewtonOnJointDeserializationCallback;
+import crab.newton.callbacks.NewtonOnJointSerializationCallback;
+import crab.newton.callbacks.NewtonPostUpdateCallback;
+import crab.newton.callbacks.NewtonSerializeCallback;
+import crab.newton.callbacks.NewtonWorldDestroyListenerCallback;
+import crab.newton.callbacks.NewtonWorldDestructorCallback;
+import crab.newton.callbacks.NewtonWorldListenerBodyDestroyCallback;
+import crab.newton.callbacks.NewtonWorldListenerDebugCallback;
+import crab.newton.callbacks.NewtonWorldRayFilterCallback;
+import crab.newton.callbacks.NewtonWorldRayPrefilterCallback;
+import crab.newton.callbacks.NewtonWorldUpdateListenerCallback;
+import crab.newton.internal.*;
 import jdk.incubator.foreign.*;
-
-import crab.newton.generated.*;
 
 /**
  * 

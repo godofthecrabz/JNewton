@@ -3,8 +3,8 @@ package crab.newton;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
-import crab.newton.generated.*;
-
+import crab.newton.callbacks.NewtonHeightFieldRayCastCallback;
+import crab.newton.internal.*;
 import jdk.incubator.foreign.*;
 
 public final class NewtonHeightField implements NewtonCollision {

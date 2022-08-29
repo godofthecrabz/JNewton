@@ -1,7 +1,9 @@
 package crab.newton;
 
-import crab.newton.generated.*;
-
+import crab.newton.callbacks.NewtonDeserializeCallback;
+import crab.newton.callbacks.NewtonReportProgress;
+import crab.newton.callbacks.NewtonSerializeCallback;
+import crab.newton.internal.*;
 import jdk.incubator.foreign.*;
 
 public class NewtonMesh {
