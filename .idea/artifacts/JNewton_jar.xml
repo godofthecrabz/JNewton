@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="JNewton:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/JNewton_jar</output-path>
+    <root id="archive" name="JNewton.jar">
+      <element id="module-output" name="JNewton" />
+    </root>
+  </artifact>
+</component>

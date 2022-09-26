@@ -1,7 +1,7 @@
 package crab.newton;
 
 import crab.newton.internal.Newton_h;
-import jdk.incubator.foreign.*;
+import java.lang.foreign.*;
 
 public sealed interface NewtonCollision permits NewtonBox, NewtonCapsule, NewtonChamferCylinder, 
 	NewtonCompoundCollision, NewtonCone, NewtonConvexHull, NewtonCylinder, NewtonHeightField, 
@@ -22,9 +22,8 @@ public sealed interface NewtonCollision permits NewtonBox, NewtonCapsule, Newton
 	}
 	
 	default float[] calculateInertiaMatrix() {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment inertiaOrigin = allocator.allocateArray(Newton_h.C_FLOAT, Newton.AABBF);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment inertiaOrigin = session.allocateArray(Newton_h.C_FLOAT, Newton.AABBF);
 			Newton_h.NewtonConvexCollisionCalculateInertialMatrix(address(), 
 					inertiaOrigin.asSlice(0L, Newton_h.C_FLOAT.byteSize() * 3), 
 					inertiaOrigin.asSlice(Newton_h.C_FLOAT.byteSize() * 3));
@@ -70,17 +69,15 @@ public sealed interface NewtonCollision permits NewtonBox, NewtonCapsule, Newton
 	}
 	
 	default void setMatrix(float[] matrix) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment matrixSegment = allocator.allocateArray(Newton_h.C_FLOAT, matrix);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment matrixSegment = session.allocateArray(Newton_h.C_FLOAT, matrix);
 			Newton_h.NewtonCollisionSetMatrix(address(), matrixSegment);
 		}
 	}
 	
 	default float[] getMatrix() {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment matrixSegment = allocator.allocateArray(Newton_h.C_FLOAT, new float[16]);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment matrixSegment = session.allocateArray(Newton_h.C_FLOAT, new float[16]);
 			Newton_h.NewtonCollisionGetMatrix(address(), matrixSegment);
 			return matrixSegment.toArray(Newton_h.C_FLOAT);
 		}
@@ -91,9 +88,8 @@ public sealed interface NewtonCollision permits NewtonBox, NewtonCapsule, Newton
 	}
 	
 	default float[] getScale() {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment xyzSeg = allocator.allocateArray(Newton_h.C_FLOAT, new float[3]);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment xyzSeg = session.allocateArray(Newton_h.C_FLOAT, new float[3]);
 			Newton_h.NewtonCollisionGetScale(address(), 
 					xyzSeg.asSlice(0L, Newton_h.C_FLOAT.byteSize()), 
 					xyzSeg.asSlice(4L, Newton_h.C_FLOAT.byteSize()), 

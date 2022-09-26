@@ -4,7 +4,7 @@ import crab.newton.callbacks.NewtonDeserializeCallback;
 import crab.newton.callbacks.NewtonReportProgress;
 import crab.newton.callbacks.NewtonSerializeCallback;
 import crab.newton.internal.*;
-import jdk.incubator.foreign.*;
+import java.lang.foreign.*;
 
 public class NewtonMesh {
 	
@@ -58,8 +58,8 @@ public class NewtonMesh {
 		return new NewtonMesh(Newton_h.NewtonMeshCreateVoronoiConvexDecomposition(world.address, pointCount, vertCloud, strideInBytes, materialID, textMatrix));
 	}
 	
-	public static NewtonMesh createFromSerialization(NewtonWorld world, NewtonDeserializeCallback deserializFunc, Addressable serializeHandle, ResourceScope scope) { 
-		NativeSymbol func = NewtonDeserializeCallback.allocate(deserializFunc, scope);
+	public static NewtonMesh createFromSerialization(NewtonWorld world, NewtonDeserializeCallback deserializFunc, Addressable serializeHandle, MemorySession session) {
+		MemorySegment func = NewtonDeserializeCallback.allocate(deserializFunc, session);
 		return new NewtonMesh(Newton_h.NewtonMeshCreateFromSerialization(world.address, func, serializeHandle));
 	}
 	
@@ -76,8 +76,8 @@ public class NewtonMesh {
 		Newton_h.NewtonMeshDestroy(address);
 	}
 	
-	public void serialize(NewtonSerializeCallback serializeFunction, Addressable serializeHandle, ResourceScope scope) {
-		NativeSymbol serializeFunc = NewtonSerializeCallback.allocate(serializeFunction, scope);
+	public void serialize(NewtonSerializeCallback serializeFunction, Addressable serializeHandle, MemorySession session) {
+		MemorySegment serializeFunc = NewtonSerializeCallback.allocate(serializeFunction, session);
 		Newton_h.NewtonMeshSerialize(address, serializeFunc, serializeHandle);
 	}
 	
@@ -86,17 +86,15 @@ public class NewtonMesh {
 	}
 	
 	public void applyTransform(float[] transform) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment matrix = allocator.allocateArray(Newton_h.C_FLOAT, transform);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment matrix = session.allocateArray(Newton_h.C_FLOAT, transform);
 			Newton_h.NewtonMeshApplyTransform(address, matrix);
 		}
 	}
 	
 	public float[] calculateOOBB() {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment oobb = allocator.allocateArray(Newton_h.C_FLOAT, Newton.MAT4F_VEC3F);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment oobb = session.allocateArray(Newton_h.C_FLOAT, Newton.MAT4F_VEC3F);
 			Newton_h.NewtonMeshCalculateOOBB(address, 
 					oobb.asSlice(0L, Newton_h.C_FLOAT.byteSize() * 16), 
 					oobb.asSlice(64L, Newton_h.C_FLOAT.byteSize()), 
@@ -111,34 +109,30 @@ public class NewtonMesh {
 	}
 	
 	public void applySphericalMapping(int material, float[] alignMatrix) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment matrix = allocator.allocateArray(Newton_h.C_FLOAT, alignMatrix);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment matrix = session.allocateArray(Newton_h.C_FLOAT, alignMatrix);
 			Newton_h.NewtonMeshApplySphericalMapping(address, material, matrix);
 		}
 	}
 	
 	public void applyCylindricalMapping(int cylinderMaterial, int capMaterial, float[] alignMatrix) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment matrix = allocator.allocateArray(Newton_h.C_FLOAT, alignMatrix);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment matrix = session.allocateArray(Newton_h.C_FLOAT, alignMatrix);
 			Newton_h.NewtonMeshApplyCylindricalMapping(address, cylinderMaterial, capMaterial, matrix);
 		}
 	}
 	
 	public void applyBoxMapping(int frontMaterial, int sideMaterial, int topMaterial, float[] alignMatrix) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment matrix = allocator.allocateArray(Newton_h.C_FLOAT, alignMatrix);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment matrix = session.allocateArray(Newton_h.C_FLOAT, alignMatrix);
 			Newton_h.NewtonMeshApplyBoxMapping(address, frontMaterial, sideMaterial, topMaterial, matrix);
 		}
 	}
 	
-	public void applyAngleBasedMapping(int material, NewtonReportProgress reportPrograssCallback, Addressable reportPrgressUserData, float[] alignMatrix, ResourceScope scope) {
-		try (ResourceScope localScope = ResourceScope.newConfinedScope()) {
-			NativeSymbol callback = NewtonReportProgress.allocate(reportPrograssCallback, scope);
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(localScope);
-			MemorySegment matrix = allocator.allocateArray(Newton_h.C_FLOAT, alignMatrix);
+	public void applyAngleBasedMapping(int material, NewtonReportProgress reportPrograssCallback, Addressable reportPrgressUserData, float[] alignMatrix, MemorySession session) {
+		try (MemorySession methodSession = MemorySession.openConfined()) {
+			MemorySegment callback = NewtonReportProgress.allocate(reportPrograssCallback, session);
+			MemorySegment matrix = methodSession.allocateArray(Newton_h.C_FLOAT, alignMatrix);
 			Newton_h.NewtonMeshApplyAngleBasedMapping(address, material, callback, reportPrgressUserData, matrix);
 		}
 	}
@@ -241,8 +235,8 @@ public class NewtonMesh {
 	
 	public int[] getIndexToVertexMap(int count) {
 		MemoryAddress indexPtr = getIndexToVertexMap();
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			return MemorySegment.ofAddress(indexPtr, Newton_h.C_INT.byteSize() * count, scope).toArray(Newton_h.C_INT);
+		try (MemorySession session = MemorySession.openConfined()) {
+			return MemorySegment.ofAddress(indexPtr, Newton_h.C_INT.byteSize() * count, session).toArray(Newton_h.C_INT);
 		}
 	}
 	
@@ -251,9 +245,8 @@ public class NewtonMesh {
 	}
 	
 	public double[] getVertexDoubleChannel(int vertexCount) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment vertexBuffer = allocator.allocateArray(Newton_h.C_DOUBLE, new double[vertexCount * 3]);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment vertexBuffer = session.allocateArray(Newton_h.C_DOUBLE, new double[vertexCount * 3]);
 			getVertexDoubleChannel((int) (Newton_h.C_DOUBLE.byteSize() * 3), vertexBuffer);
 			return vertexBuffer.toArray(Newton_h.C_DOUBLE);
 		}
@@ -264,9 +257,8 @@ public class NewtonMesh {
 	}
 	
 	public float[] getVertexChannel(int vertexCount) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment vertexBuffer = allocator.allocateArray(Newton_h.C_FLOAT, new float[vertexCount * 3]);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment vertexBuffer = session.allocateArray(Newton_h.C_FLOAT, new float[vertexCount * 3]);
 			getVertexChannel((int) (Newton_h.C_FLOAT.byteSize() * 3), vertexBuffer);
 			return vertexBuffer.toArray(Newton_h.C_FLOAT);
 		}
@@ -277,9 +269,8 @@ public class NewtonMesh {
 	}
 	
 	public float[] getNormalChannel(int vertexCount) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment normalBuffer = allocator.allocateArray(Newton_h.C_FLOAT, new float[vertexCount * 3]);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment normalBuffer = session.allocateArray(Newton_h.C_FLOAT, new float[vertexCount * 3]);
 			getNormalChannel((int) (Newton_h.C_FLOAT.byteSize() * 3), normalBuffer);
 			return normalBuffer.toArray(Newton_h.C_FLOAT);
 		}
@@ -290,9 +281,8 @@ public class NewtonMesh {
 	}
 	
 	public float[] getBiNormalChannel(int vertexCount) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment biNormalBuffer = allocator.allocateArray(Newton_h.C_FLOAT, new float[vertexCount * 3]);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment biNormalBuffer = session.allocateArray(Newton_h.C_FLOAT, new float[vertexCount * 3]);
 			getBiNormalChannel((int) (Newton_h.C_FLOAT.byteSize() * 3), biNormalBuffer);
 			return biNormalBuffer.toArray(Newton_h.C_FLOAT);
 		}
@@ -303,9 +293,8 @@ public class NewtonMesh {
 	}
 	
 	public float[] getUV0Channel(int vertexCount) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment uvBuffer = allocator.allocateArray(Newton_h.C_FLOAT, new float[vertexCount * 2]);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment uvBuffer = session.allocateArray(Newton_h.C_FLOAT, new float[vertexCount * 2]);
 			getUV0Channel((int) (Newton_h.C_FLOAT.byteSize() * 2), uvBuffer);
 			return uvBuffer.toArray(Newton_h.C_FLOAT);
 		}
@@ -316,9 +305,8 @@ public class NewtonMesh {
 	}
 	
 	public float[] getUV1Channel(int vertexCount) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment uvBuffer = allocator.allocateArray(Newton_h.C_FLOAT, new float[vertexCount * 2]);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment uvBuffer = session.allocateArray(Newton_h.C_FLOAT, new float[vertexCount * 2]);
 			getUV1Channel((int) (Newton_h.C_FLOAT.byteSize() * 2), uvBuffer);
 			return uvBuffer.toArray(Newton_h.C_FLOAT);
 		}
@@ -329,9 +317,8 @@ public class NewtonMesh {
 	}
 	
 	public float[] getVertexColorChannel(int vertexCount) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment colorBuffer = allocator.allocateArray(Newton_h.C_FLOAT, new float[vertexCount * 4]);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment colorBuffer = session.allocateArray(Newton_h.C_FLOAT, new float[vertexCount * 4]);
 			getVertexColorChannel((int) (Newton_h.C_FLOAT.byteSize() * 4), colorBuffer);
 			return colorBuffer.toArray(Newton_h.C_FLOAT);
 		}
@@ -386,9 +373,8 @@ public class NewtonMesh {
 	}
 	
 	public int[] materialGetIndexStream(MemoryAddress handle, int materialID, int indexCount) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment indexStream = allocator.allocateArray(Newton_h.C_INT, new int[indexCount]);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment indexStream = session.allocateArray(Newton_h.C_INT, new int[indexCount]);
 			materialGetIndexStream(handle, materialID, indexStream);
 			return indexStream.toArray(Newton_h.C_INT);
 		}
@@ -399,9 +385,8 @@ public class NewtonMesh {
 	}
 	
 	public short[] materialGetIndexStreamShort(MemoryAddress handle, int materialID, int indexCount) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment indexStream = allocator.allocateArray(Newton_h.C_SHORT, new short[indexCount]);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment indexStream = session.allocateArray(Newton_h.C_SHORT, new short[indexCount]);
 			materialGetIndexStreamShort(handle, materialID, indexStream);
 			return indexStream.toArray(Newton_h.C_SHORT);
 		}
@@ -449,8 +434,8 @@ public class NewtonMesh {
 	
 	public double[] getVertexArray(int vertexCount, int vertexStride) {
 		MemoryAddress vertexBuffer = getVertexArray();
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			return MemorySegment.ofAddress(vertexBuffer, Newton_h.C_DOUBLE.byteSize() * (vertexCount * vertexStride), scope).toArray(Newton_h.C_DOUBLE);
+		try (MemorySession session = MemorySession.openConfined()) {
+			return MemorySegment.ofAddress(vertexBuffer, Newton_h.C_DOUBLE.byteSize() * (vertexCount * vertexStride), session).toArray(Newton_h.C_DOUBLE);
 		}
 	}
 	
@@ -503,9 +488,8 @@ public class NewtonMesh {
 	}
 	
 	public int[] getEdgeIndices(MemoryAddress edge) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment indices = allocator.allocateArray(Newton_h.C_INT, new int[2]);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment indices = session.allocateArray(Newton_h.C_INT, new int[2]);
 			getEdgeIndices(edge, indices.asSlice(0L, Newton_h.C_INT.byteSize()), indices.asSlice(4L, Newton_h.C_INT.byteSize()));
 			return indices.toArray(Newton_h.C_INT);
 		}
@@ -536,9 +520,8 @@ public class NewtonMesh {
 	}
 	
 	public int[] getFaceIndices(MemoryAddress face, int indiceCount) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment indices = allocator.allocateArray(Newton_h.C_INT, new int[indiceCount]);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment indices = session.allocateArray(Newton_h.C_INT, new int[indiceCount]);
 			getFaceIndices(face, indices);
 			return indices.toArray(Newton_h.C_INT);
 		}
@@ -549,9 +532,8 @@ public class NewtonMesh {
 	}
 	
 	public int[] getFacePointIndices(MemoryAddress face, int indiceCount) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment indices = allocator.allocateArray(Newton_h.C_INT, new int[indiceCount]);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment indices = session.allocateArray(Newton_h.C_INT, new int[indiceCount]);
 			getFacePointIndices(face, indices);
 			return indices.toArray(Newton_h.C_INT);
 		}
@@ -562,9 +544,8 @@ public class NewtonMesh {
 	}
 	
 	public double[] calculateFaceNormals(MemoryAddress face) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment normal = allocator.allocateArray(Newton_h.C_DOUBLE, Newton.VEC3D);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment normal = session.allocateArray(Newton_h.C_DOUBLE, Newton.VEC3D);
 			calculateFaceNormals(face, normal);
 			return normal.toArray(Newton_h.C_DOUBLE);
 		}

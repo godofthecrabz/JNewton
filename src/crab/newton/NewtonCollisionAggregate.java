@@ -1,7 +1,7 @@
 package crab.newton;
 
 import crab.newton.internal.Newton_h;
-import jdk.incubator.foreign.MemoryAddress;
+import java.lang.foreign.MemoryAddress;
 
 public class NewtonCollisionAggregate {
 	

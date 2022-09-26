@@ -5,7 +5,7 @@ import java.util.Objects;
 
 import crab.newton.callbacks.NewtonHeightFieldRayCastCallback;
 import crab.newton.internal.*;
-import jdk.incubator.foreign.*;
+import java.lang.foreign.*;
 
 public final class NewtonHeightField implements NewtonCollision {
 	
@@ -47,8 +47,8 @@ public final class NewtonHeightField implements NewtonCollision {
 		return new NewtonHeightField(Newton_h.NewtonCreateHeightFieldCollision(world.address, width, height, gridsDiagonals, elevationdatType, elevationSeg, attributeSeg, verticalScale, horizontalScale_x, horizontalScale_z, shapeID));
 	}
 	
-	public void setUserRaycastCallback(NewtonHeightFieldRayCastCallback rayHitCallback, ResourceScope scope) {
-		NativeSymbol rayHitCallbackFunc = NewtonHeightFieldRayCastCallback.allocate(rayHitCallback, scope);
+	public void setUserRaycastCallback(NewtonHeightFieldRayCastCallback rayHitCallback, MemorySession session) {
+		MemorySegment rayHitCallbackFunc = NewtonHeightFieldRayCastCallback.allocate(rayHitCallback, session);
 		Newton_h.NewtonHeightFieldSetUserRayCastCallback(address, rayHitCallbackFunc);
 	}
 

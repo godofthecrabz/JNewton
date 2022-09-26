@@ -5,7 +5,7 @@ import crab.newton.callbacks.NewtonApplyForceAndTorque;
 import crab.newton.callbacks.NewtonBodyDestructor;
 import crab.newton.callbacks.NewtonSetTransform;
 import crab.newton.internal.*;
-import jdk.incubator.foreign.*;
+import java.lang.foreign.*;
 
 public sealed interface NewtonBody permits NewtonAsymetricDynamicBody, NewtonKinematicBody, NewtonDynamicBody {
 	
@@ -48,25 +48,22 @@ public sealed interface NewtonBody permits NewtonAsymetricDynamicBody, NewtonKin
 	}
 	
 	default void addForce(float[] force) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment forceSeg = allocator.allocateArray(Newton_h.C_FLOAT, force);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment forceSeg = session.allocateArray(Newton_h.C_FLOAT, force);
 			Newton_h.NewtonBodyAddForce(address(), forceSeg);
 		}
 	}
 	
 	default void addTorque(float[] torque) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment torqueSeg = allocator.allocateArray(Newton_h.C_FLOAT, torque);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment torqueSeg = session.allocateArray(Newton_h.C_FLOAT, torque);
 			Newton_h.NewtonBodyAddTorque(address(), torqueSeg);
 		}
 	}
 	
 	default void setCenterOfMass(float[] center) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment centerSeg = allocator.allocateArray(Newton_h.C_FLOAT, center);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment centerSeg = session.allocateArray(Newton_h.C_FLOAT, center);
 			Newton_h.NewtonBodySetCentreOfMass(address(), centerSeg);
 		}
 	}
@@ -76,9 +73,8 @@ public sealed interface NewtonBody permits NewtonAsymetricDynamicBody, NewtonKin
 	}
 	
 	default void setFullMassMatrix(float mass, float[] inertiaMatrix) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment matrix = allocator.allocateArray(Newton_h.C_FLOAT, inertiaMatrix);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment matrix = session.allocateArray(Newton_h.C_FLOAT, inertiaMatrix);
 			Newton_h.NewtonBodySetFullMassMatrix(address(), mass, matrix);
 		}
 	}
@@ -88,25 +84,22 @@ public sealed interface NewtonBody permits NewtonAsymetricDynamicBody, NewtonKin
 	}
 	
 	default void setMatrix(float[] matrix) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment matrixSeg = allocator.allocateArray(Newton_h.C_FLOAT, matrix);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment matrixSeg = session.allocateArray(Newton_h.C_FLOAT, matrix);
 			Newton_h.NewtonBodySetMatrix(address(), matrixSeg);
 		}
 	}
 	
 	default void setMatrixNoSleep(float[] matrix) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment matrixSeg = allocator.allocateArray(Newton_h.C_FLOAT, matrix);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment matrixSeg = session.allocateArray(Newton_h.C_FLOAT, matrix);
 			Newton_h.NewtonBodySetMatrixNoSleep(address(), matrixSeg);
 		}
 	}
 	
 	default void setMatrixRecursive(float[] matrix) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment matrixSeg = allocator.allocateArray(Newton_h.C_FLOAT, matrix);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment matrixSeg = session.allocateArray(Newton_h.C_FLOAT, matrix);
 			Newton_h.NewtonBodySetMatrixRecursive(address(), matrixSeg);
 		}
 	}
@@ -124,49 +117,43 @@ public sealed interface NewtonBody permits NewtonAsymetricDynamicBody, NewtonKin
 	}
 	
 	default void setOmega(float[] omega) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment omegaSeg = allocator.allocateArray(Newton_h.C_FLOAT, omega);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment omegaSeg = session.allocateArray(Newton_h.C_FLOAT, omega);
 			Newton_h.NewtonBodySetOmega(address(), omegaSeg);
 		}
 	}
 	
 	default void setOmegaNoSleep(float[] omega) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment omegaSeg = allocator.allocateArray(Newton_h.C_FLOAT, omega);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment omegaSeg = session.allocateArray(Newton_h.C_FLOAT, omega);
 			Newton_h.NewtonBodySetOmegaNoSleep(address(), omegaSeg);
 		}
 	}
 	
 	default void setVelocity(float[] velocity) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment velSeg = allocator.allocateArray(Newton_h.C_FLOAT, velocity);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment velSeg = session.allocateArray(Newton_h.C_FLOAT, velocity);
 			Newton_h.NewtonBodySetVelocity(address(), velSeg);
 		}
 	}
 	
 	default void setVelocityNoSleep(float[] velocity) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment velSeg = allocator.allocateArray(Newton_h.C_FLOAT, velocity);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment velSeg = session.allocateArray(Newton_h.C_FLOAT, velocity);
 			Newton_h.NewtonBodySetVelocityNoSleep(address(), velSeg);
 		}
 	}
 	
 	default void setForce(float[] force) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment forceSeg = allocator.allocateArray(Newton_h.C_FLOAT, force);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment forceSeg = session.allocateArray(Newton_h.C_FLOAT, force);
 			Newton_h.NewtonBodySetForce(address(), forceSeg);
 		}
 	}
 	
 	default void setTorque(float[] torque) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment torqueSeg = allocator.allocateArray(Newton_h.C_FLOAT, torque);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment torqueSeg = session.allocateArray(Newton_h.C_FLOAT, torque);
 			Newton_h.NewtonBodySetTorque(address(), torqueSeg);
 		}
 	}
@@ -176,9 +163,8 @@ public sealed interface NewtonBody permits NewtonAsymetricDynamicBody, NewtonKin
 	}
 	
 	default void setAngularDamping(float[] angularDamp) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment dampSeg = allocator.allocateArray(Newton_h.C_FLOAT, angularDamp);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment dampSeg = session.allocateArray(Newton_h.C_FLOAT, angularDamp);
 			Newton_h.NewtonBodySetAngularDamping(address(), dampSeg);
 		}
 	}
@@ -223,34 +209,34 @@ public sealed interface NewtonBody permits NewtonAsymetricDynamicBody, NewtonKin
 		Newton_h.NewtonBodySetGyroscopicTorque(address(), state);
 	}
 	
-	default void setDestructorCallback(NewtonBodyDestructor callback, ResourceScope scope) {
-		NativeSymbol callbackFunc = NewtonBodyDestructor.allocate(callback, scope);
+	default void setDestructorCallback(NewtonBodyDestructor callback, MemorySession session) {
+		MemorySegment callbackFunc = NewtonBodyDestructor.allocate(callback, session);
 		Newton_h.NewtonBodySetDestructorCallback(address(), callbackFunc);
 	}
 	
-	default NewtonBodyDestructor getDestructorCallback(ResourceScope scope) {
+	default NewtonBodyDestructor getDestructorCallback(MemorySession session) {
 		MemoryAddress funcAddress = Newton_h.NewtonBodyGetDestructorCallback(address());
-		return NewtonBodyDestructor.ofAddress(funcAddress, scope);
+		return NewtonBodyDestructor.ofAddress(funcAddress, session);
 	}
 	
-	default void setTransformCallback(NewtonSetTransform callback, ResourceScope scope) {
-		NativeSymbol callbackFunc = NewtonSetTransform.allocate(callback, scope);
+	default void setTransformCallback(NewtonSetTransform callback, MemorySession session) {
+		MemorySegment callbackFunc = NewtonSetTransform.allocate(callback, session);
 		Newton_h.NewtonBodySetTransformCallback(address(), callbackFunc);
 	}
 	
-	default NewtonSetTransform getTransformCallback(ResourceScope scope) {
+	default NewtonSetTransform getTransformCallback(MemorySession session) {
 		MemoryAddress funcAddress = Newton_h.NewtonBodyGetTransformCallback(address());
-		return NewtonSetTransform.ofAddress(funcAddress, scope);
+		return NewtonSetTransform.ofAddress(funcAddress, session);
 	}
 	
-	default void setForceAndTorqueCallback(NewtonApplyForceAndTorque callback, ResourceScope scope) {
-		NativeSymbol callbackFunc = NewtonApplyForceAndTorque.allocate(callback, scope);
+	default void setForceAndTorqueCallback(NewtonApplyForceAndTorque callback, MemorySession session) {
+		MemorySegment callbackFunc = NewtonApplyForceAndTorque.allocate(callback, session);
 		Newton_h.NewtonBodySetForceAndTorqueCallback(address(), callbackFunc);
 	}
 	
-	default NewtonApplyForceAndTorque getForceAndTorqueCallback(ResourceScope scope) {
+	default NewtonApplyForceAndTorque getForceAndTorqueCallback(MemorySession session) {
 		MemoryAddress funcAddress = Newton_h.NewtonBodyGetForceAndTorqueCallback(address());
-		return NewtonApplyForceAndTorque.ofAddress(funcAddress, scope);
+		return NewtonApplyForceAndTorque.ofAddress(funcAddress, session);
 	}
 	
 	default int getID() {
@@ -290,36 +276,32 @@ public sealed interface NewtonBody permits NewtonAsymetricDynamicBody, NewtonKin
 	}
 	
 	default float[] getPosition() {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment posSeg = allocator.allocateArray(Newton_h.C_FLOAT, Newton.VEC3F);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment posSeg = session.allocateArray(Newton_h.C_FLOAT, Newton.VEC3F);
 			Newton_h.NewtonBodyGetPosition(address(), posSeg);
 			return posSeg.toArray(Newton_h.C_FLOAT);
 		}
 	}
 	
 	default float[] getMatrix() {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment matrixSeg = allocator.allocateArray(Newton_h.C_FLOAT, Newton.MAT4F);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment matrixSeg = session.allocateArray(Newton_h.C_FLOAT, Newton.MAT4F);
 			Newton_h.NewtonBodyGetMatrix(address(), matrixSeg);
 			return matrixSeg.toArray(Newton_h.C_FLOAT);
 		}
 	}
 	
 	default float[] getRotation() {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment rotSeg = allocator.allocateArray(Newton_h.C_FLOAT, Newton.VEC4F);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment rotSeg = session.allocateArray(Newton_h.C_FLOAT, Newton.VEC4F);
 			Newton_h.NewtonBodyGetRotation(address(), rotSeg);
 			return rotSeg.toArray(Newton_h.C_FLOAT);
 		}
 	}
 	
 	default float[] getMass() {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment massSeg = allocator.allocateArray(Newton_h.C_FLOAT, Newton.VEC4F);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment massSeg = session.allocateArray(Newton_h.C_FLOAT, Newton.VEC4F);
 			Newton_h.NewtonBodyGetMass(address(), 
 					massSeg.asSlice(0L, Newton_h.C_FLOAT.byteSize()), 
 					massSeg.asSlice(4L, Newton_h.C_FLOAT.byteSize()), 
@@ -330,9 +312,8 @@ public sealed interface NewtonBody permits NewtonAsymetricDynamicBody, NewtonKin
 	}
 	
 	default float[] getInverseMass() {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment massSeg = allocator.allocateArray(Newton_h.C_FLOAT, Newton.VEC4F);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment massSeg = session.allocateArray(Newton_h.C_FLOAT, Newton.VEC4F);
 			Newton_h.NewtonBodyGetInvMass(address(), 
 					massSeg.asSlice(0L, Newton_h.C_FLOAT.byteSize()), 
 					massSeg.asSlice(4L, Newton_h.C_FLOAT.byteSize()), 
@@ -343,120 +324,107 @@ public sealed interface NewtonBody permits NewtonAsymetricDynamicBody, NewtonKin
 	}
 	
 	default float[] getInertiaMatrix() {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment matrixSeg = allocator.allocateArray(Newton_h.C_FLOAT, Newton.MAT4F);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment matrixSeg = session.allocateArray(Newton_h.C_FLOAT, Newton.MAT4F);
 			Newton_h.NewtonBodyGetInertiaMatrix(address(), matrixSeg);
 			return matrixSeg.toArray(Newton_h.C_FLOAT);
 		}
 	}
 	
 	default float[] getInverseInertiaMatrix() {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment matrixSeg = allocator.allocateArray(Newton_h.C_FLOAT, Newton.MAT4F);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment matrixSeg = session.allocateArray(Newton_h.C_FLOAT, Newton.MAT4F);
 			Newton_h.NewtonBodyGetInvInertiaMatrix(address(), matrixSeg);
 			return matrixSeg.toArray(Newton_h.C_FLOAT);
 		}
 	}
 	
 	default float[] getOmega() {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment omegaSeg = allocator.allocateArray(Newton_h.C_FLOAT, Newton.VEC3F);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment omegaSeg = session.allocateArray(Newton_h.C_FLOAT, Newton.VEC3F);
 			Newton_h.NewtonBodyGetOmega(address(), omegaSeg);
 			return omegaSeg.toArray(Newton_h.C_FLOAT);
 		}
 	}
 	
 	default float[] getVelocity() {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment velSeg = allocator.allocateArray(Newton_h.C_FLOAT, Newton.VEC3F);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment velSeg = session.allocateArray(Newton_h.C_FLOAT, Newton.VEC3F);
 			Newton_h.NewtonBodyGetVelocity(address(), velSeg);
 			return velSeg.toArray(Newton_h.C_FLOAT);
 		}
 	}
 	
 	default float[] getAlpha() {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment alphaSeg = allocator.allocateArray(Newton_h.C_FLOAT, Newton.VEC3F);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment alphaSeg = session.allocateArray(Newton_h.C_FLOAT, Newton.VEC3F);
 			Newton_h.NewtonBodyGetAlpha(address(), alphaSeg);
 			return alphaSeg.toArray(Newton_h.C_FLOAT);
 		}
 	}
 	
 	default float[] getAcceleration() {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment accSeg = allocator.allocateArray(Newton_h.C_FLOAT, Newton.VEC3F);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment accSeg = session.allocateArray(Newton_h.C_FLOAT, Newton.VEC3F);
 			Newton_h.NewtonBodyGetAcceleration(address(), accSeg);
 			return accSeg.toArray(Newton_h.C_FLOAT);
 		}
 	}
 	
 	default float[] getForce() {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment forceSeg = allocator.allocateArray(Newton_h.C_FLOAT, Newton.VEC3F);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment forceSeg = session.allocateArray(Newton_h.C_FLOAT, Newton.VEC3F);
 			Newton_h.NewtonBodyGetForce(address(), forceSeg);
 			return forceSeg.toArray(Newton_h.C_FLOAT);
 		}
 	}
 	
 	default float[] getTorque() {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment torqueSeg = allocator.allocateArray(Newton_h.C_FLOAT, Newton.VEC3F);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment torqueSeg = session.allocateArray(Newton_h.C_FLOAT, Newton.VEC3F);
 			Newton_h.NewtonBodyGetTorque(address(), torqueSeg);
 			return torqueSeg.toArray(Newton_h.C_FLOAT);
 		}
 	}
 	
 	default float[] getCenterOfMass() {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment comSeg = allocator.allocateArray(Newton_h.C_FLOAT, Newton.VEC3F);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment comSeg = session.allocateArray(Newton_h.C_FLOAT, Newton.VEC3F);
 			Newton_h.NewtonBodyGetCentreOfMass(address(), comSeg);
 			return comSeg.toArray(Newton_h.C_FLOAT);
 		}
 	}
 	
 	default float[] getPointVelocity(float[] point) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment pointSeg = allocator.allocateArray(Newton_h.C_FLOAT, point);
-			MemorySegment velSeg = allocator.allocateArray(Newton_h.C_FLOAT, Newton.VEC3F);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment pointSeg = session.allocateArray(Newton_h.C_FLOAT, point);
+			MemorySegment velSeg = session.allocateArray(Newton_h.C_FLOAT, Newton.VEC3F);
 			Newton_h.NewtonBodyGetPointVelocity(address(), pointSeg, velSeg);
 			return velSeg.toArray(Newton_h.C_FLOAT);
 		}
 	}
 	
 	default void addImpulsePair(float[] linearImpulse, float[] angularImpulse, float timeStep) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment linearSegment = allocator.allocateArray(Newton_h.C_FLOAT, linearImpulse);
-			MemorySegment angularSegment = allocator.allocateArray(Newton_h.C_FLOAT, angularImpulse);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment linearSegment = session.allocateArray(Newton_h.C_FLOAT, linearImpulse);
+			MemorySegment angularSegment = session.allocateArray(Newton_h.C_FLOAT, angularImpulse);
 			Newton_h.NewtonBodyApplyImpulsePair(address(), linearSegment, angularSegment, timeStep);
 		}
 	}
 	
 	default void addImpulse(float[] deltaVelocity, float[] point, float timestep) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment velSeg = allocator.allocateArray(Newton_h.C_FLOAT, deltaVelocity);
-			MemorySegment pointSeg = allocator.allocateArray(Newton_h.C_FLOAT, point);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment velSeg = session.allocateArray(Newton_h.C_FLOAT, deltaVelocity);
+			MemorySegment pointSeg = session.allocateArray(Newton_h.C_FLOAT, point);
 			Newton_h.NewtonBodyAddImpulse(address(), velSeg, pointSeg, timestep);
 		}
 	}
 	
 	default void addImpulseArray(int impulseCount, float[] impulseArray, float[] pointArray, float timestep) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
+		try (MemorySession session = MemorySession.openConfined()) {
 			int strideInBytes = (int) Newton_h.C_FLOAT.byteSize() * 3;
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment impulseSegment = allocator.allocateArray(Newton_h.C_FLOAT, impulseArray);
-			MemorySegment pointSegment = allocator.allocateArray(Newton_h.C_FLOAT, pointArray);
+			MemorySegment impulseSegment = session.allocateArray(Newton_h.C_FLOAT, impulseArray);
+			MemorySegment pointSegment = session.allocateArray(Newton_h.C_FLOAT, pointArray);
 			Newton_h.NewtonBodyApplyImpulseArray(address(), impulseCount, strideInBytes, impulseSegment, pointSegment, timestep);
 		}
 	}
@@ -470,18 +438,16 @@ public sealed interface NewtonBody permits NewtonAsymetricDynamicBody, NewtonKin
 	}
 	
 	default float[] getAngularDamping() {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment vecSeg = allocator.allocateArray(Newton_h.C_FLOAT, Newton.VEC3F);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment vecSeg = session.allocateArray(Newton_h.C_FLOAT, Newton.VEC3F);
 			Newton_h.NewtonBodyGetAngularDamping(address(), vecSeg);
 			return vecSeg.toArray(Newton_h.C_FLOAT);
 		}
 	}
 	
 	default float[] getAABB() {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment aabb = allocator.allocateArray(Newton_h.C_FLOAT, Newton.AABBF);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment aabb = session.allocateArray(Newton_h.C_FLOAT, Newton.AABBF);
 			Newton_h.NewtonBodyGetAABB(address(), 
 					aabb.asSlice(0L, Newton_h.C_FLOAT.byteSize() * 3), 
 					aabb.asSlice(Newton_h.C_FLOAT.byteSize() * 3));

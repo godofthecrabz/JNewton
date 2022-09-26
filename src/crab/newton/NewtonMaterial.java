@@ -1,7 +1,7 @@
 package crab.newton;
 
 import crab.newton.internal.Newton_h;
-import jdk.incubator.foreign.*;
+import java.lang.foreign.*;
 
 public class NewtonMaterial {
 	
@@ -29,18 +29,16 @@ public class NewtonMaterial {
 	}
 	
 	public float[] getContactForce(NewtonBody body) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment forceSegment = allocator.allocateArray(Newton_h.C_FLOAT, Newton.VEC3F);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment forceSegment = session.allocateArray(Newton_h.C_FLOAT, Newton.VEC3F);
 			Newton_h.NewtonMaterialGetContactForce(address, body.address(), forceSegment);
 			return forceSegment.toArray(Newton_h.C_FLOAT);
 		}
 	}
 	
 	public float[] getContactPositionAndNormal(NewtonBody body) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment positionNormal = allocator.allocateArray(Newton_h.C_FLOAT, Newton.AABBF);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment positionNormal = session.allocateArray(Newton_h.C_FLOAT, Newton.AABBF);
 			Newton_h.NewtonMaterialGetContactPositionAndNormal(address, body.address(), 
 					positionNormal.asSlice(0L, Newton_h.C_FLOAT.byteSize() * 3), 
 					positionNormal.asSlice(Newton_h.C_FLOAT.byteSize() * 3));
@@ -49,9 +47,8 @@ public class NewtonMaterial {
 	}
 	
 	public float[] getContactTangentDirections(NewtonBody body) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment dir = allocator.allocateArray(Newton_h.C_FLOAT, Newton.AABBF);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment dir = session.allocateArray(Newton_h.C_FLOAT, Newton.AABBF);
 			Newton_h.NewtonMaterialGetContactTangentDirections(address, body.address(), 
 					dir.asSlice(0L, Newton_h.C_FLOAT.byteSize() * 3), 
 					dir.asSlice(Newton_h.C_FLOAT.byteSize() * 3));
@@ -104,17 +101,15 @@ public class NewtonMaterial {
 	}
 	
 	public void setContactNormalDirection(float[] direction) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment dirSegment = allocator.allocateArray(Newton_h.C_FLOAT, direction);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment dirSegment = session.allocateArray(Newton_h.C_FLOAT, direction);
 			Newton_h.NewtonMaterialSetContactNormalDirection(address, dirSegment);
 		}
 	}
 	
 	public void setContactPosition(float[] position) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment positionSegment = allocator.allocateArray(Newton_h.C_FLOAT, position);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment positionSegment = session.allocateArray(Newton_h.C_FLOAT, position);
 			Newton_h.NewtonMaterialSetContactPosition(address, positionSegment);
 		}
 	}
@@ -128,9 +123,8 @@ public class NewtonMaterial {
 	}
 	
 	public void rotateContactTangentDirections(float[] alignVector) {
-		try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-			SegmentAllocator allocator = SegmentAllocator.nativeAllocator(scope);
-			MemorySegment alignVecSegment = allocator.allocateArray(Newton_h.C_FLOAT, alignVector);
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment alignVecSegment = session.allocateArray(Newton_h.C_FLOAT, alignVector);
 			Newton_h.NewtonMaterialContactRotateTangentDirections(address, alignVecSegment);
 		}
 	}

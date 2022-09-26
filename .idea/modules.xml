@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/JNewton.iml" filepath="$PROJECT_DIR$/JNewton.iml" />
+      <module fileurl="file://$PROJECT_DIR$/JNewton-Windows_x64/JNewton-Windows_x64.iml" filepath="$PROJECT_DIR$/JNewton-Windows_x64/JNewton-Windows_x64.iml" />
+    </modules>
+  </component>
+</project>

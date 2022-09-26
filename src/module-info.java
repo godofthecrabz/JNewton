@@ -1,6 +1,4 @@
-module crab.JNewton {
-	requires transitive jdk.incubator.foreign;
-	
+module crab.jnewton {
 	exports crab.newton;
 	exports crab.newton.callbacks;
 }
