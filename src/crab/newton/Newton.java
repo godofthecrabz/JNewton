@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
+import java.lang.foreign.MemorySession;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -28,15 +29,15 @@ public class Newton {
 	 * Method fails if library jar i
 	 * @throws IOException
 	 */
-	public static void loadNewton() throws IOException {
-		RuntimeHelper.loadLibrary();
+	public static void loadNewton(MemorySession session) throws IOException {
+		RuntimeHelper.loadLibrary(session);
 	}
 	
-	public static void loadNewton(String filepath) {
-		RuntimeHelper.loadLibrary(filepath);
+	public static void loadNewton(String filepath, MemorySession session) {
+		RuntimeHelper.loadLibrary(filepath, session);
 	}
 
-	public static void unloadNewton() {
-		RuntimeHelper.unloadLibrary();
+	public static boolean unloadNewton() {
+		return RuntimeHelper.unloadLibrary();
 	}
 }

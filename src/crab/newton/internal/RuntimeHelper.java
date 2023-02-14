@@ -20,10 +20,8 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -39,9 +37,9 @@ public final class RuntimeHelper {
     private final static MethodHandles.Lookup MH_LOOKUP = MethodHandles.lookup();
     private static SymbolLookup SYMBOL_LOOKUP;
 
-    private static MemorySession dllSession;
-
     private static Path newtonPath;
+
+    private static File newtonLibrary;
 
     final static SegmentAllocator CONSTANT_ALLOCATOR =
             (size, align) -> MemorySegment.allocateNative(size, align, MemorySession.openImplicit());
@@ -55,35 +53,29 @@ public final class RuntimeHelper {
 
     private final static SegmentAllocator THROWING_ALLOCATOR = (x, y) -> { throw new AssertionError("should not reach here"); };
 
-    public static void loadLibrary() throws IOException {
-        if (dllSession != null && dllSession.isAlive()) {
-            return;
+    public static void loadLibrary(MemorySession session) throws IOException {
+        if (newtonLibrary != null) {
+            newtonLibrary.delete();
         }
-        dllSession = MemorySession.openConfined();
         Platform platform = Platform.get();
         newtonPath = Files.createTempFile(Paths.get(System.getProperty("user.dir")), "newton", platform.fileType);
+        newtonLibrary = newtonPath.toFile();
         InputStream stream = LOADER.getResourceAsStream(Platform.getNewtonPath());
         byte[] line = stream.readAllBytes();
         Files.write(newtonPath, line);
-        SYMBOL_LOOKUP = SymbolLookup.libraryLookup(newtonPath, dllSession);
+        SYMBOL_LOOKUP = SymbolLookup.libraryLookup(newtonPath, session);
     }
 
-    public static void loadLibrary(String filename) {
-        if (dllSession != null && dllSession.isAlive()) {
-            return;
-        }
-        dllSession = MemorySession.openConfined();
-        SYMBOL_LOOKUP = SymbolLookup.libraryLookup(filename, dllSession);
+    public static void loadLibrary(String filename, MemorySession session) {
+        SYMBOL_LOOKUP = SymbolLookup.libraryLookup(filename, session);
     }
 
-    public static void unloadLibrary() {
-        if (dllSession != null && dllSession.isAlive()) {
-            dllSession.close();
+    public static boolean unloadLibrary() {
+        newtonPath = null;
+        if (newtonLibrary != null) {
+            return newtonLibrary.delete();
         }
-        if (newtonPath != null) {
-            newtonPath.toFile().delete();
-            newtonPath = null;
-        }
+        return false;
     }
 
     public static final MemorySegment lookupGlobalVariable(String name, MemoryLayout layout) {

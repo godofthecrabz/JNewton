@@ -20,11 +20,11 @@ public class NewtonCollisionAggregate {
 	}
 	
 	public void addBody(NewtonBody body) {
-		Newton_h.NewtonCollisionAggregateAddBody(address, body.address());
+		Newton_h.NewtonCollisionAggregateAddBody(address, body.address);
 	}
 	
 	public void removeBody(NewtonBody body) {
-		Newton_h.NewtonCollisionAggregateRemoveBody(address, body.address());
+		Newton_h.NewtonCollisionAggregateRemoveBody(address, body.address);
 	}
 	
 	public int getSelfCollision() {

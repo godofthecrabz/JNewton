@@ -38,7 +38,7 @@ public class NewtonMesh {
 	 * @return
 	 */
 	public static NewtonMesh createFromCollision(NewtonCollision collision) {
-		return new NewtonMesh(Newton_h.NewtonMeshCreateFromCollision(collision.address()));
+		return new NewtonMesh(Newton_h.NewtonMeshCreateFromCollision(collision.address));
 	}
 	
 	public static NewtonMesh createTetrahedraIsoSurface(NewtonMesh mesh) {

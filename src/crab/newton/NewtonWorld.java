@@ -30,6 +30,7 @@ import crab.newton.callbacks.NewtonWorldRayPrefilterCallback;
 import crab.newton.callbacks.NewtonWorldUpdateListenerCallback;
 import crab.newton.internal.*;
 import java.lang.foreign.*;
+import java.nio.charset.StandardCharsets;
 
 /**
  * 
@@ -55,6 +56,206 @@ public class NewtonWorld {
 	 */
 	public static NewtonWorld create() {
 		return new NewtonWorld(Newton_h.NewtonCreate(EMPTY));
+	}
+
+	/**
+	 * Creates an instance of a box collision
+	 * @param dx
+	 * @param dy
+	 * @param dz
+	 * @param shapeID
+	 * @param offsetMatrix
+	 * @return
+	 */
+	public NewtonCollision createBox(float dx, float dy, float dz, int shapeID, float[] offsetMatrix) {
+		if (offsetMatrix.length != 16) {
+			throw new RuntimeException("offsetMatrix incorrect length");
+		}
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment matrix = session.allocateArray(Newton_h.C_FLOAT, offsetMatrix);
+			return new NewtonCollision(Newton_h.NewtonCreateBox(address, dx, dy, dz, shapeID, matrix));
+		}
+	}
+
+	public NewtonCollision createBox(float dx, float dy, float dz, int shapeID) {
+		return new NewtonCollision(Newton_h.NewtonCreateBox(address, dx, dy, dz, shapeID, MemoryAddress.NULL));
+	}
+
+	/**
+	 *
+	 * @param radius0
+	 * @param radius1
+	 * @param height
+	 * @param shapeID
+	 * @param offsetMatrix
+	 * @return
+	 */
+	public NewtonCollision createCapsule(float radius0, float radius1, float height, int shapeID, float[] offsetMatrix) {
+		if (offsetMatrix.length != 16) {
+			throw new RuntimeException("offsetMatrix incorrect length");
+		}
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment matrix = session.allocateArray(Newton_h.C_FLOAT, offsetMatrix);
+			return new NewtonCollision(Newton_h.NewtonCreateCapsule(address, radius0, radius1, height, shapeID, matrix));
+		}
+	}
+
+	public NewtonCollision createCapsule(float radius0, float radius1, float height, int shapeID) {
+		return new NewtonCollision(Newton_h.NewtonCreateCapsule(address, radius0, radius1, height, shapeID, MemoryAddress.NULL));
+	}
+
+	/**
+	 *
+	 * @param radius
+	 * @param height
+	 * @param shapeID
+	 * @param offsetMatrix
+	 * @return
+	 */
+	public NewtonCollision createChamferCylinder(float radius,  float height,  int shapeID,  float[] offsetMatrix) {
+		if (offsetMatrix.length != 16) {
+			throw new RuntimeException("offsetMatrix incorrect length");
+		}
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment matrix = session.allocateArray(Newton_h.C_FLOAT, offsetMatrix);
+			return new NewtonCollision(Newton_h.NewtonCreateChamferCylinder(address, radius, height, shapeID, matrix));
+		}
+	}
+
+	public NewtonCollision createChamferCylinder(float radius,  float height,  int shapeID) {
+		return new NewtonCollision(Newton_h.NewtonCreateChamferCylinder(address, radius, height, shapeID, MemoryAddress.NULL));
+	}
+
+	public NewtonCollision createCompoundCollision(int shapeID) {
+		return new NewtonCollision(Newton_h.NewtonCreateCompoundCollision(address, shapeID));
+	}
+
+	public NewtonCollision createCompoundCollision(NewtonMesh mesh, float hullTolerance, int shapeID, int subShapeID) {
+		return new NewtonCollision(Newton_h.NewtonCreateCompoundCollisionFromMesh(address, mesh.address, hullTolerance, shapeID, subShapeID));
+	}
+
+	public NewtonCollision createCone(float radius,  float height,  int shapeID,  float[] offsetMatrix) {
+		if (offsetMatrix.length != 16) {
+			throw new RuntimeException("offsetMatrix incorrect length");
+		}
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment matrix = session.allocateArray(Newton_h.C_FLOAT, offsetMatrix);
+			return new NewtonCollision(Newton_h.NewtonCreateCone(address, radius, height, shapeID, matrix));
+		}
+	}
+
+	public NewtonCollision createCone(float radius,  float height,  int shapeID) {
+		return new NewtonCollision(Newton_h.NewtonCreateCone(address, radius, height, shapeID, MemoryAddress.NULL));
+	}
+
+	public NewtonCollision createConvexHull(int count,  float[] vertexCloud,  int strideInBytes,  float tolerance,  int shapeID,  float[] offsetMatrix) {
+		if (offsetMatrix.length != 16) {
+			throw new RuntimeException("offsetMatrix incorrect length");
+		}
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment matrix = session.allocateArray(Newton_h.C_FLOAT, offsetMatrix);
+			MemorySegment vertCloud = session.allocateArray(Newton_h.C_FLOAT, vertexCloud);
+			return new NewtonCollision(Newton_h.NewtonCreateConvexHull(address, count, vertCloud, strideInBytes, tolerance, shapeID, matrix));
+		}
+	}
+
+	public NewtonCollision createConvexHull(int count,  float[] vertexCloud,  int strideInBytes,  float tolerance,  int shapeID) {
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment vertCloud = session.allocateArray(Newton_h.C_FLOAT, vertexCloud);
+			return new NewtonCollision(Newton_h.NewtonCreateConvexHull(address, count, vertCloud, strideInBytes, tolerance, shapeID, MemoryAddress.NULL));
+		}
+	}
+
+	public NewtonCollision createCylinder(float radio0,  float radio1,  float height,  int shapeID,  float[] offsetMatrix) {
+		if (offsetMatrix.length != 16) {
+			throw new RuntimeException("offsetMatrix incorrect length");
+		}
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment matrix = session.allocateArray(Newton_h.C_FLOAT, offsetMatrix);
+			return new NewtonCollision(Newton_h.NewtonCreateCylinder(address, radio0, radio1, height, shapeID, matrix));
+		}
+	}
+
+	public NewtonCollision createCylinder(float radio0,  float radio1,  float height,  int shapeID) {
+		return new NewtonCollision(Newton_h.NewtonCreateCylinder(address, radio0, radio1, height, shapeID, MemoryAddress.NULL));
+	}
+
+	public NewtonCollision createHeightField(int width,  int height,  int gridsDiagonals,  float[] elevationMap,  char[] attributeMap,  float verticalScale,  float horizontalScale_x,  float horizontalScale_z,  int shapeID) {
+		int elevationDataType = 0;
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment elevationMapSegment = session.allocateArray(Newton_h.C_FLOAT, elevationMap);
+			MemorySegment attributeSeg = session.allocateArray(Newton_h.C_CHAR, new String(attributeMap).getBytes(StandardCharsets.UTF_8));
+			return new NewtonCollision(Newton_h.NewtonCreateHeightFieldCollision(address, width, height, gridsDiagonals, elevationDataType, elevationMapSegment, attributeSeg, verticalScale, horizontalScale_x, horizontalScale_z, shapeID));
+		}
+	}
+
+	public NewtonCollision createHeightField(int width,  int height,  int gridsDiagonals,  short[] elevationMap,  char[] attributeMap,  float verticalScale,  float horizontalScale_x,  float horizontalScale_z,  int shapeID) {
+		int elevationDataType = 1;
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment elevationMapSegment = session.allocateArray(Newton_h.C_SHORT, elevationMap);
+			MemorySegment attributeSeg = session.allocateArray(Newton_h.C_CHAR, new String(attributeMap).getBytes(StandardCharsets.UTF_8));
+			return new NewtonCollision(Newton_h.NewtonCreateHeightFieldCollision(address, width, height, gridsDiagonals, elevationDataType, elevationMapSegment, attributeSeg, verticalScale, horizontalScale_x, horizontalScale_z, shapeID));
+		}
+	}
+
+	public NewtonCollision createNullCollision() {
+		return new NewtonCollision(Newton_h.NewtonCreateNull(address));
+	}
+
+	public NewtonCollision createSceneCollision(int shapeID) {
+		return new NewtonCollision(Newton_h.NewtonCreateSceneCollision(address, shapeID));
+	}
+
+	public NewtonCollision createSphere(float radius, int shapeID, float[] offsetMatrix) {
+		if (offsetMatrix.length != 16) {
+			throw new RuntimeException("offsetMatrix incorrect length");
+		}
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment matrix = session.allocateArray(Newton_h.C_FLOAT, offsetMatrix);
+			return new NewtonCollision(Newton_h.NewtonCreateSphere(address, radius, shapeID, matrix));
+		}
+	}
+
+	public NewtonCollision createSphere(float radius, int shapeID) {
+		return new NewtonCollision(Newton_h.NewtonCreateSphere(address, radius, shapeID, MemoryAddress.NULL));
+	}
+
+	public NewtonCollision createTreeCollision(int shapeID) {
+		return new NewtonCollision(Newton_h.NewtonCreateTreeCollision(address, shapeID));
+	}
+
+	public NewtonCollision createTreeCollisionFromMesh(NewtonMesh mesh, int shapeID) {
+		return new NewtonCollision(Newton_h.NewtonCreateTreeCollisionFromMesh(address, mesh.address, shapeID));
+	}
+
+	public NewtonBody createAsymetricDynamicBody(NewtonCollision collision, float[] matrix) {
+		if (matrix.length != 16) {
+			throw new RuntimeException("matrix incorrect length");
+		}
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment matrixSeg = session.allocateArray(Newton_h.C_FLOAT, matrix);
+			return  new NewtonBody(Newton_h.NewtonCreateAsymetricDynamicBody(address, collision.address, matrixSeg));
+		}
+	}
+
+	public NewtonBody createDynamicBody(NewtonCollision collision, float[] matrix) {
+		if (matrix.length != 16) {
+			throw new RuntimeException("matrix incorrect length");
+		}
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment matrixSeg = session.allocateArray(Newton_h.C_FLOAT, matrix);
+			return  new NewtonBody(Newton_h.NewtonCreateDynamicBody(address, collision.address, matrixSeg));
+		}
+	}
+
+	public NewtonBody createKinematicBody(NewtonCollision collision, float[] matrix) {
+		if (matrix.length != 16) {
+			throw new RuntimeException("matrix incorrect length");
+		}
+		try (MemorySession session = MemorySession.openConfined()) {
+			MemorySegment matrixSeg = session.allocateArray(Newton_h.C_FLOAT, matrix);
+			return  new NewtonBody(Newton_h.NewtonCreateKinematicBody(address, collision.address, matrixSeg));
+		}
 	}
 	
 	/**
@@ -277,11 +478,7 @@ public class NewtonWorld {
 	public NewtonBody findSerializedBody(int bodySerializedID) {
 		MemoryAddress body = Newton_h.NewtonFindSerializedBody(address, bodySerializedID);
 		int bodyType = Newton_h.NewtonBodyGetType(body);
-		return switch (bodyType) {
-			case 0 -> new NewtonDynamicBody(body);
-			case 1 -> new NewtonKinematicBody(body);
-			default -> throw new RuntimeException("Error finding serialized body");
-		};
+		return new NewtonBody(body, bodyType);
 	}
 	
 	public void setJointSerializationCallbacks(NewtonOnJointSerializationCallback serializeJoint, NewtonOnJointDeserializationCallback deserializeJoint,
@@ -442,7 +639,7 @@ public class NewtonWorld {
 		MemorySegment matrixSegment = session.allocateArray(Newton_h.C_FLOAT, matrix);
 		MemorySegment targetSegment = session.allocateArray(Newton_h.C_FLOAT, target);
 		MemorySegment prefilterFunc = NewtonWorldRayPrefilterCallback.allocate(prefilter, session);
-		return Newton_h.NewtonWorldConvexCast(address, matrixSegment, targetSegment, shape.address(), param, userData, prefilterFunc, info, maxContactsCount, threadIndex);
+		return Newton_h.NewtonWorldConvexCast(address, matrixSegment, targetSegment, shape.address, param, userData, prefilterFunc, info, maxContactsCount, threadIndex);
 	}
 	
 	public int getBodyCount() {
@@ -531,7 +728,7 @@ public class NewtonWorld {
 	}
 	
 	public NewtonBody getNextBody(NewtonBody body) {
-		MemoryAddress bodyPtr = Newton_h.NewtonWorldGetNextBody(address, body.address());
+		MemoryAddress bodyPtr = Newton_h.NewtonWorldGetNextBody(address, body.address);
 		return bodyPtr.equals(MemoryAddress.NULL) ? null : NewtonBody.wrap(bodyPtr);
 	}
 	
@@ -542,7 +739,7 @@ public class NewtonWorld {
 	
 	public void serializeCollision(NewtonCollision collision, NewtonSerializeCallback serializeFunction, Addressable serializeHandle, MemorySession session) {
 		MemorySegment serializeFunc = NewtonSerializeCallback.allocate(serializeFunction, session);
-		Newton_h.NewtonCollisionSerialize(address, collision.address(), serializeFunc, serializeHandle);
+		Newton_h.NewtonCollisionSerialize(address, collision.address, serializeFunc, serializeHandle);
 	}
 	
 	public void destroyAllBodies() {
