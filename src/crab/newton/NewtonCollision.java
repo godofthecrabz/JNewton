@@ -3,7 +3,7 @@ package crab.newton;
 import crab.newton.callbacks.NewtonCollisionTreeRayCastCallback;
 import crab.newton.callbacks.NewtonHeightFieldRayCastCallback;
 import crab.newton.callbacks.NewtonTreeCollisionFaceCallback;
-import crab.newton.internal.Newton_h;
+
 import java.lang.foreign.*;
 
 public final class NewtonCollision {
@@ -24,201 +24,233 @@ public final class NewtonCollision {
 			USERMESH = 13,
 			SCENE = 14,
 			FRACTURED_COMPOUND = 15;
-	protected final MemoryAddress address;
+	protected final MemorySegment address;
 	public final int collisionType;
 
-	protected NewtonCollision(MemoryAddress address) {
-		this(address, Newton_h.NewtonCollisionGetType(address));
+	protected NewtonCollision(MemorySegment address) {
+		this(address, Newton.NewtonCollisionGetType(address));
 	}
 
-	protected NewtonCollision(MemoryAddress address, int collisionType) {
+	protected NewtonCollision(MemorySegment address, int collisionType) {
 		this.address = address;
 		this.collisionType = collisionType;
 	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof NewtonCollision collision &&
+				this.address.equals(collision.address) &&
+				this.collisionType == collision.collisionType;
+	}
+
+	public NewtonMesh createMesh() {
+		return new NewtonMesh(Newton.NewtonMeshCreateFromCollision(address));
+	}
 	
 	public int getMode() {
-		return Newton_h.NewtonCollisionGetMode(address);
+		return Newton.NewtonCollisionGetMode(address);
 	}
 
 	public void setMode(int mode) {
-		Newton_h.NewtonCollisionSetMode(address, mode);
+		Newton.NewtonCollisionSetMode(address, mode);
 	}
 
 	public float calculateVolume() {
-		return Newton_h.NewtonConvexCollisionCalculateVolume(address);
+		return Newton.NewtonConvexCollisionCalculateVolume(address);
+	}
+
+	public void calculateInertiaMatrix(MemorySegment inertiaOrigin) {
+		Newton.NewtonConvexCollisionCalculateInertialMatrix(address,
+				inertiaOrigin.asSlice(0L, Newton.VEC3F.byteSize()),
+				inertiaOrigin.asSlice(Newton.VEC3F.byteSize()));
 	}
 
 	public float[] calculateInertiaMatrix() {
-		try (MemorySession session = MemorySession.openConfined()) {
-			MemorySegment inertiaOrigin = session.allocateArray(Newton_h.C_FLOAT, Newton.AABBF);
-			Newton_h.NewtonConvexCollisionCalculateInertialMatrix(address,
-					inertiaOrigin.asSlice(0L, Newton_h.C_FLOAT.byteSize() * 3), 
-					inertiaOrigin.asSlice(Newton_h.C_FLOAT.byteSize() * 3));
-			return inertiaOrigin.toArray(Newton_h.C_FLOAT);
+		try (Arena arena = Arena.openConfined()) {
+			MemorySegment inertiaOrigin = arena.allocate(Newton.AABBF);
+			Newton.NewtonConvexCollisionCalculateInertialMatrix(address,
+					inertiaOrigin.asSlice(0L, Newton.VEC3F.byteSize()),
+					inertiaOrigin.asSlice(Newton.VEC3F.byteSize()));
+			return inertiaOrigin.toArray(Newton.C_FLOAT);
 		}
 	}
 
 	public boolean isConvex() {
-		return Newton_h.NewtonCollisionIsConvexShape(address) == 1 ? true : false;
+		return Newton.NewtonCollisionIsConvexShape(address) == 1;
 	}
 
 	public boolean isStatic() {
-		return Newton_h.NewtonCollisionIsStaticShape(address) == 1 ? true : false;
+		return Newton.NewtonCollisionIsStaticShape(address) == 1;
 	}
 
-	public void setUserData(Addressable data) {
-		Newton_h.NewtonCollisionSetUserData(address, data);
+	public void setUserData(MemorySegment data) {
+		Newton.NewtonCollisionSetUserData(address, data);
 	}
 
-	public MemoryAddress getUserData() {
-		return Newton_h.NewtonCollisionGetUserData(address);
+	public MemorySegment getUserData() {
+		return Newton.NewtonCollisionGetUserData(address);
 	}
 
 	public void setUserID(long id) {
-		Newton_h.NewtonCollisionSetUserID(address, id);
+		Newton.NewtonCollisionSetUserID(address, id);
 	}
 
 	public long getUserID() {
-		return Newton_h.NewtonCollisionGetUserID(address);
+		return Newton.NewtonCollisionGetUserID(address);
 	}
 
-	public MemoryAddress getSubCollisionHandle() {
-		return Newton_h.NewtonCollisionGetSubCollisionHandle(address);
+	public MemorySegment getSubCollisionHandle() {
+		return Newton.NewtonCollisionGetSubCollisionHandle(address);
 	}
 
 	public NewtonCollision getParentInstance() {
-		MemoryAddress ptr = Newton_h.NewtonCollisionGetParentInstance(address);
-		return ptr.equals(MemoryAddress.NULL) ? null : NewtonCollision.wrap(ptr);
+		MemorySegment ptr = Newton.NewtonCollisionGetParentInstance(address);
+		return ptr.equals(MemorySegment.NULL) ? null : NewtonCollision.wrap(ptr);
+	}
+
+	public void setMatrix(MemorySegment matrix) {
+		Newton.NewtonCollisionSetMatrix(address, matrix);
 	}
 
 	public void setMatrix(float[] matrix) {
-		try (MemorySession session = MemorySession.openConfined()) {
-			MemorySegment matrixSegment = session.allocateArray(Newton_h.C_FLOAT, matrix);
-			Newton_h.NewtonCollisionSetMatrix(address, matrixSegment);
+		try (Arena arena = Arena.openConfined()) {
+			MemorySegment matrixSegment = arena.allocateArray(Newton.C_FLOAT, matrix);
+			Newton.NewtonCollisionSetMatrix(address, matrixSegment);
 		}
 	}
 
+	public void getMatrix(MemorySegment matrix) {
+		Newton.NewtonCollisionGetMatrix(address, matrix);
+	}
+
 	public float[] getMatrix() {
-		try (MemorySession session = MemorySession.openConfined()) {
-			MemorySegment matrixSegment = session.allocateArray(Newton_h.C_FLOAT, new float[16]);
-			Newton_h.NewtonCollisionGetMatrix(address, matrixSegment);
-			return matrixSegment.toArray(Newton_h.C_FLOAT);
+		try (Arena arena = Arena.openConfined()) {
+			MemorySegment matrixSegment = arena.allocate(Newton.MAT4F);
+			Newton.NewtonCollisionGetMatrix(address, matrixSegment);
+			return matrixSegment.toArray(Newton.C_FLOAT);
 		}
 	}
 
 	public void setScale(float x, float y, float z) {
-		Newton_h.NewtonCollisionSetScale(address, x, y, z);
+		Newton.NewtonCollisionSetScale(address, x, y, z);
+	}
+
+	public void getScale(MemorySegment vector) {
+		Newton.NewtonCollisionGetScale(address,
+				vector.asSlice(0L, Newton.C_FLOAT.byteSize()),
+				vector.asSlice(4L, Newton.C_FLOAT.byteSize()),
+				vector.asSlice(8L, Newton.C_FLOAT.byteSize()));
 	}
 
 	public float[] getScale() {
-		try (MemorySession session = MemorySession.openConfined()) {
-			MemorySegment xyzSeg = session.allocateArray(Newton_h.C_FLOAT, new float[3]);
-			Newton_h.NewtonCollisionGetScale(address,
-					xyzSeg.asSlice(0L, Newton_h.C_FLOAT.byteSize()), 
-					xyzSeg.asSlice(4L, Newton_h.C_FLOAT.byteSize()), 
-					xyzSeg.asSlice(8L, Newton_h.C_FLOAT.byteSize()));
-			return xyzSeg.toArray(Newton_h.C_FLOAT);
+		try (Arena arena = Arena.openConfined()) {
+			MemorySegment xyzSeg = arena.allocate(Newton.VEC3F);
+			Newton.NewtonCollisionGetScale(address,
+					xyzSeg.asSlice(0L, Newton.C_FLOAT.byteSize()), 
+					xyzSeg.asSlice(4L, Newton.C_FLOAT.byteSize()), 
+					xyzSeg.asSlice(8L, Newton.C_FLOAT.byteSize()));
+			return xyzSeg.toArray(Newton.C_FLOAT);
 		}
 	}
 
 	public void destroy() {
-		Newton_h.NewtonDestroyCollision(address);
+		Newton.NewtonDestroyCollision(address);
 	}
 
 	public float getSkinThickness() {
-		return Newton_h.NewtonCollisionGetSkinThickness(address);
+		return Newton.NewtonCollisionGetSkinThickness(address);
 	}
 
 	public void setSkinThickness(float thickness) {
-		Newton_h.NewtonCollisionSetSkinThickness(address, thickness);
+		Newton.NewtonCollisionSetSkinThickness(address, thickness);
 	}
 
 	//Compound & Scene Collision methods
 
 	public void beginAddRemove() {
 		switch (collisionType) {
-			case COMPOUND -> Newton_h.NewtonCompoundCollisionBeginAddRemove(address);
-			case SCENE -> Newton_h.NewtonSceneCollisionBeginAddRemove(address);
+			case COMPOUND -> Newton.NewtonCompoundCollisionBeginAddRemove(address);
+			case SCENE -> Newton.NewtonSceneCollisionBeginAddRemove(address);
 			default -> throw new RuntimeException("Collision Type incompatible with this method");
 		}
 	}
 
-	public MemoryAddress addSubCollision(NewtonCollision collision) {
+	public MemorySegment addSubCollision(NewtonCollision collision) {
 		return switch (collisionType) {
-			case COMPOUND -> Newton_h.NewtonCompoundCollisionAddSubCollision(address, collision.address);
-			case SCENE -> Newton_h.NewtonSceneCollisionAddSubCollision(address, collision.address);
+			case COMPOUND -> Newton.NewtonCompoundCollisionAddSubCollision(address, collision.address);
+			case SCENE -> Newton.NewtonSceneCollisionAddSubCollision(address, collision.address);
 			default -> throw new RuntimeException("Collision Type incompatible with this method");
 		};
 	}
 
-	public void removeSubCollision(MemoryAddress collisionNode) {
+	public void removeSubCollision(MemorySegment collisionNode) {
 		switch (collisionType) {
-			case COMPOUND -> Newton_h.NewtonCompoundCollisionRemoveSubCollision(address, collisionNode);
-			case SCENE -> Newton_h.NewtonSceneCollisionRemoveSubCollision(address, collisionNode);
+			case COMPOUND -> Newton.NewtonCompoundCollisionRemoveSubCollision(address, collisionNode);
+			case SCENE -> Newton.NewtonSceneCollisionRemoveSubCollision(address, collisionNode);
 			default -> throw new RuntimeException("Collision Type incompatible with this method");
 		}
 	}
 
 	public void removeSubCollisionByIndex(int index) {
 		switch (collisionType) {
-			case COMPOUND -> Newton_h.NewtonCompoundCollisionRemoveSubCollisionByIndex(address, index);
-			case SCENE -> Newton_h.NewtonSceneCollisionRemoveSubCollisionByIndex(address, index);
+			case COMPOUND -> Newton.NewtonCompoundCollisionRemoveSubCollisionByIndex(address, index);
+			case SCENE -> Newton.NewtonSceneCollisionRemoveSubCollisionByIndex(address, index);
 			default -> throw new RuntimeException("Collision Type incompatible with this method");
 		}
 	}
 
-	public void setSubCollisionMatrix(MemoryAddress collisionNode, float[] matrix) {
+	public void setSubCollisionMatrix(MemorySegment collisionNode, float[] matrix) {
 		//switch (collisionType) {
-		//	case COMPOUND -> Newton_h.NewtonCompoundCollisionRemoveSubCollisionByIndex(address, index);
-		//	case SCENE -> Newton_h.NewtonSceneCollisionRemoveSubCollisionByIndex(address, index);
+		//	case COMPOUND -> Newton.NewtonCompoundCollisionRemoveSubCollisionByIndex(address, index);
+		//	case SCENE -> Newton.NewtonSceneCollisionRemoveSubCollisionByIndex(address, index);
 		//	default -> throw new RuntimeException("Collision Type incompatible with this method");
 		//}
 	}
 
 	public void endAddRemove() {
 		switch (collisionType) {
-			case COMPOUND -> Newton_h.NewtonCompoundCollisionEndAddRemove(address);
-			case SCENE -> Newton_h.NewtonSceneCollisionEndAddRemove(address);
+			case COMPOUND -> Newton.NewtonCompoundCollisionEndAddRemove(address);
+			case SCENE -> Newton.NewtonSceneCollisionEndAddRemove(address);
 			default -> throw new RuntimeException("Collision Type incompatible with this method");
 		}
 	}
 
-	public MemoryAddress getFirstNode() {
+	public MemorySegment getFirstNode() {
 		return switch (collisionType) {
-			case COMPOUND -> Newton_h.NewtonCompoundCollisionGetFirstNode(address);
-			case SCENE -> Newton_h.NewtonSceneCollisionGetFirstNode(address);
+			case COMPOUND -> Newton.NewtonCompoundCollisionGetFirstNode(address);
+			case SCENE -> Newton.NewtonSceneCollisionGetFirstNode(address);
 			default -> throw new RuntimeException("Collision Type incompatible with this method");
 		};
 	}
 
-	public MemoryAddress getNextNode(MemoryAddress nextNode) {
+	public MemorySegment getNextNode(MemorySegment nextNode) {
 		return switch (collisionType) {
-			case COMPOUND -> Newton_h.NewtonCompoundCollisionGetNextNode(address, nextNode);
-			case SCENE -> Newton_h.NewtonSceneCollisionGetNextNode(address, nextNode.address());
+			case COMPOUND -> Newton.NewtonCompoundCollisionGetNextNode(address, nextNode);
+			case SCENE -> Newton.NewtonSceneCollisionGetNextNode(address, nextNode);
 			default -> throw new RuntimeException("Collision Type incompatible with this method");
 		};
 	}
 
-	public MemoryAddress getNodeByIndex(int index) {
+	public MemorySegment getNodeByIndex(int index) {
 		return switch (collisionType) {
-			case COMPOUND -> Newton_h.NewtonCompoundCollisionGetNodeByIndex(address, index);
-			case SCENE -> Newton_h.NewtonSceneCollisionGetNodeByIndex(address, index);
+			case COMPOUND -> Newton.NewtonCompoundCollisionGetNodeByIndex(address, index);
+			case SCENE -> Newton.NewtonSceneCollisionGetNodeByIndex(address, index);
 			default -> throw new RuntimeException("Collision Type incompatible with this method");
 		};
 	}
 
-	public int getNodeIndex(MemoryAddress collisionNode) {
+	public int getNodeIndex(MemorySegment collisionNode) {
 		return switch (collisionType) {
-			case COMPOUND -> Newton_h.NewtonCompoundCollisionGetNodeIndex(address, collisionNode);
-			case SCENE -> Newton_h.NewtonSceneCollisionGetNodeIndex(address, collisionNode);
+			case COMPOUND -> Newton.NewtonCompoundCollisionGetNodeIndex(address, collisionNode);
+			case SCENE -> Newton.NewtonSceneCollisionGetNodeIndex(address, collisionNode);
 			default -> throw new RuntimeException("Collision Type incompatible with this method");
 		};
 	}
 
-	public NewtonCollision getCollisionFromNode(MemoryAddress collisionNode) {
+	public NewtonCollision getCollisionFromNode(MemorySegment collisionNode) {
 		return switch (collisionType) {
-			case COMPOUND -> NewtonCollision.wrap(Newton_h.NewtonCompoundCollisionGetCollisionFromNode(address, collisionNode));
-			case SCENE -> NewtonCollision.wrap(Newton_h.NewtonSceneCollisionGetCollisionFromNode(address, collisionNode));
+			case COMPOUND -> NewtonCollision.wrap(Newton.NewtonCompoundCollisionGetCollisionFromNode(address, collisionNode));
+			case SCENE -> NewtonCollision.wrap(Newton.NewtonSceneCollisionGetCollisionFromNode(address, collisionNode));
 			default -> throw new RuntimeException("Collision Type incompatible with this method");
 		};
 	}
@@ -229,40 +261,53 @@ public final class NewtonCollision {
 		return 0;
 	}
 
-	//HeightField collision methods
+	//HeightField/Tree collision methods
 
-	public void setUserRaycastCallback(NewtonHeightFieldRayCastCallback rayHitCallback, MemorySession session) {
+	public void setUserRaycastCallback(MemorySegment callback) {
+		switch (collisionType) {
+			case HEIGHTFIELD -> Newton.NewtonHeightFieldSetUserRayCastCallback(address, callback);
+			case TREE -> Newton.NewtonTreeCollisionSetUserRayCastCallback(address, callback);
+			default -> throw new RuntimeException("Collision Type incompatible with this method");
+		}
+	}
+
+	public void setUserRaycastCallback(NewtonHeightFieldRayCastCallback rayHitCallback, SegmentScope scope) {
 		if (collisionType != HEIGHTFIELD) {
 			throw new RuntimeException("Collision Type incompatible with this method");
 		}
-		MemorySegment rayHitCallbackFunc = NewtonHeightFieldRayCastCallback.allocate(rayHitCallback, session);
-		Newton_h.NewtonHeightFieldSetUserRayCastCallback(address, rayHitCallbackFunc);
+		MemorySegment rayHitCallbackFunc = NewtonHeightFieldRayCastCallback.allocate(rayHitCallback, scope);
+		Newton.NewtonHeightFieldSetUserRayCastCallback(address, rayHitCallbackFunc);
 	}
 
-	//Tree Collision methods
-
-	public void setUserRayCastCallback(NewtonCollisionTreeRayCastCallback rayHitCallback, MemorySession session) {
+	public void setUserRayCastCallback(NewtonCollisionTreeRayCastCallback rayHitCallback, SegmentScope scope) {
 		if (collisionType != TREE) {
 			throw new RuntimeException("Collision Type incompatible with this method");
 		}
-		MemorySegment rayHitCallbackFunc = NewtonCollisionTreeRayCastCallback.allocate(rayHitCallback, session);
-		Newton_h.NewtonTreeCollisionSetUserRayCastCallback(address, rayHitCallbackFunc);
+		MemorySegment rayHitCallbackFunc = NewtonCollisionTreeRayCastCallback.allocate(rayHitCallback, scope);
+		Newton.NewtonTreeCollisionSetUserRayCastCallback(address, rayHitCallbackFunc);
 	}
 
 	public void beginBuild() {
 		if (collisionType != TREE) {
 			throw new RuntimeException("Collision Type incompatible with this method");
 		}
-		Newton_h.NewtonTreeCollisionBeginBuild(address);
+		Newton.NewtonTreeCollisionBeginBuild(address);
+	}
+
+	public void addFace(int vertexCount, MemorySegment vertexList, int strideInBytes, int faceAttribute) {
+		if (collisionType != TREE) {
+			throw new RuntimeException("Collision Type incompatible with this method");
+		}
+		Newton.NewtonTreeCollisionAddFace(address, vertexCount, vertexList, strideInBytes, faceAttribute);
 	}
 
 	public void addFace(int vertexCount, float[] vertexList, int strideInBytes, int faceAttribute) {
 		if (collisionType != TREE) {
 			throw new RuntimeException("Collision Type incompatible with this method");
 		}
-		try (MemorySession session = MemorySession.openConfined()) {
-			MemorySegment vertexSegment = session.allocateArray(Newton_h.C_FLOAT, vertexList);
-			Newton_h.NewtonTreeCollisionAddFace(address, vertexCount, vertexSegment, strideInBytes, faceAttribute);
+		try (Arena arena = Arena.openConfined()) {
+			MemorySegment vertexSegment = arena.allocateArray(Newton.C_FLOAT, vertexList);
+			Newton.NewtonTreeCollisionAddFace(address, vertexCount, vertexSegment, strideInBytes, faceAttribute);
 		}
 	}
 
@@ -270,39 +315,60 @@ public final class NewtonCollision {
 		if (collisionType != TREE) {
 			throw new RuntimeException("Collision Type incompatible with this method");
 		}
-		Newton_h.NewtonTreeCollisionEndBuild(address, optimize);
+		Newton.NewtonTreeCollisionEndBuild(address, optimize);
+	}
+
+	public int getFaceAttribute(MemorySegment faceIndexArray, int indexCount) {
+		if (collisionType != TREE) {
+			throw new RuntimeException("Collision Type incompatible with this method");
+		}
+		return Newton.NewtonTreeCollisionGetFaceAttribute(address, faceIndexArray, indexCount);
 	}
 
 	public int getFaceAttribute(int[] faceIndexArray, int indexCount) {
 		if (collisionType != TREE) {
 			throw new RuntimeException("Collision Type incompatible with this method");
 		}
-		try (MemorySession session = MemorySession.openConfined()) {
-			MemorySegment indexSegment = session.allocateArray(Newton_h.C_INT, faceIndexArray);
-			return Newton_h.NewtonTreeCollisionGetFaceAttribute(address, indexSegment, indexCount);
+		try (Arena arena = Arena.openConfined()) {
+			MemorySegment indexSegment = arena.allocateArray(Newton.C_INT, faceIndexArray);
+			return Newton.NewtonTreeCollisionGetFaceAttribute(address, indexSegment, indexCount);
 		}
+	}
+
+	public void setFaceAttribute(MemorySegment faceIndexArray, int indexCount, int attribute) {
+		if (collisionType != TREE) {
+			throw new RuntimeException("Collision Type incompatible with this method");
+		}
+		Newton.NewtonTreeCollisionSetFaceAttribute(address, faceIndexArray, indexCount, attribute);
 	}
 
 	public void setFaceAttribute(int[] faceIndexArray, int indexCount, int attribute) {
 		if (collisionType != TREE) {
 			throw new RuntimeException("Collision Type incompatible with this method");
 		}
-		try (MemorySession session = MemorySession.openConfined()) {
-			MemorySegment indexSegment = session.allocateArray(Newton_h.C_INT, faceIndexArray);
-			Newton_h.NewtonTreeCollisionSetFaceAttribute(address, indexSegment, indexCount, attribute);
+		try (Arena arena = Arena.openConfined()) {
+			MemorySegment indexSegment = arena.allocateArray(Newton.C_INT, faceIndexArray);
+			Newton.NewtonTreeCollisionSetFaceAttribute(address, indexSegment, indexCount, attribute);
 		}
 	}
 
-	public void forEachFace(NewtonTreeCollisionFaceCallback forEachFaceCallback, Addressable context, MemorySession session) {
+	public void forEachFace(MemorySegment callback, MemorySegment context) {
 		if (collisionType != TREE) {
 			throw new RuntimeException("Collision Type incompatible with this method");
 		}
-		MemorySegment forEachFunc = NewtonTreeCollisionFaceCallback.allocate(forEachFaceCallback, session);
-		Newton_h.NewtonTreeCollisionForEachFace(address, forEachFunc, context);
+		Newton.NewtonTreeCollisionForEachFace(address, callback, context);
+	}
+
+	public void forEachFace(NewtonTreeCollisionFaceCallback forEachFaceCallback, MemorySegment context, SegmentScope scope) {
+		if (collisionType != TREE) {
+			throw new RuntimeException("Collision Type incompatible with this method");
+		}
+		MemorySegment forEachFunc = NewtonTreeCollisionFaceCallback.allocate(forEachFaceCallback, scope);
+		Newton.NewtonTreeCollisionForEachFace(address, forEachFunc, context);
 	}
 	
-	public static NewtonCollision wrap(MemoryAddress address) {
-		int collisionType = Newton_h.NewtonCollisionGetType(address);
+	public static NewtonCollision wrap(MemorySegment address) {
+		int collisionType = Newton.NewtonCollisionGetType(address);
 		return new NewtonCollision(address, collisionType);
 	}
 }

@@ -1,21 +1,20 @@
 package crab.newton;
 
-import crab.newton.internal.Newton_h;
-import java.lang.foreign.*;
+import java.lang.foreign.MemorySegment;
 
 public class NewtonJoint {
 	
-	protected final MemoryAddress address;
+	protected final MemorySegment address;
 	
-	protected NewtonJoint(MemoryAddress address) {
+	protected NewtonJoint(MemorySegment address) {
 		this.address = address;
 	}
 	
 	public float getContactPruningTolerance() {
-		return Newton_h.NewtonMaterialGetContactPruningTolerance(address);
+		return Newton.NewtonMaterialGetContactPruningTolerance(address);
 	}
 	
 	public void setContactPruningTolerance(float tolerance) {
-		Newton_h.NewtonMaterialSetContactPruningTolerance(address, tolerance);
+		Newton.NewtonMaterialSetContactPruningTolerance(address, tolerance);
 	}
 }

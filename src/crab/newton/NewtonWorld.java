@@ -38,15 +38,14 @@ import java.nio.charset.StandardCharsets;
  *
  */
 public class NewtonWorld {
-	
-	private static final Object[] EMPTY = new Object[] {};
-	protected final MemoryAddress address;
+
+	protected final MemorySegment address;
 	
 	/**
 	 * Internal NewtonWorld Constructor
 	 * @param address - address of the NewtonWorld object
 	 */
-	private NewtonWorld(MemoryAddress address) {
+	private NewtonWorld(MemorySegment address) {
 		this.address = address;
 	}
 	
@@ -55,7 +54,14 @@ public class NewtonWorld {
 	 * @return NewtonWorld
 	 */
 	public static NewtonWorld create() {
-		return new NewtonWorld(Newton_h.NewtonCreate(EMPTY));
+		return new NewtonWorld(Newton.NewtonCreate());
+	}
+
+	public NewtonCollision createBox(float dx, float dy, float dz, int shapeID, MemorySegment offsetMatrix) {
+		if (offsetMatrix.byteSize() != Newton.MAT4F.byteSize()) {
+			throw new RuntimeException("offsetMatrix incorrect size");
+		}
+		return new NewtonCollision(Newton.NewtonCreateBox(address, dx, dy, dz, shapeID, offsetMatrix));
 	}
 
 	/**
@@ -71,14 +77,21 @@ public class NewtonWorld {
 		if (offsetMatrix.length != 16) {
 			throw new RuntimeException("offsetMatrix incorrect length");
 		}
-		try (MemorySession session = MemorySession.openConfined()) {
-			MemorySegment matrix = session.allocateArray(Newton_h.C_FLOAT, offsetMatrix);
-			return new NewtonCollision(Newton_h.NewtonCreateBox(address, dx, dy, dz, shapeID, matrix));
+		try (Arena arena = Arena.openConfined()) {
+			MemorySegment matrix = arena.allocateArray(Newton.C_FLOAT, offsetMatrix);
+			return new NewtonCollision(Newton.NewtonCreateBox(address, dx, dy, dz, shapeID, matrix));
 		}
 	}
 
 	public NewtonCollision createBox(float dx, float dy, float dz, int shapeID) {
-		return new NewtonCollision(Newton_h.NewtonCreateBox(address, dx, dy, dz, shapeID, MemoryAddress.NULL));
+		return new NewtonCollision(Newton.NewtonCreateBox(address, dx, dy, dz, shapeID, MemorySegment.NULL));
+	}
+
+	public NewtonCollision createCapsule(float radius0, float radius1, float height, int shapeID, MemorySegment offsetMatrix) {
+		if (offsetMatrix.byteSize() != Newton.MAT4F.byteSize()) {
+			throw new RuntimeException("offsetMatrix incorrect size");
+		}
+		return new NewtonCollision(Newton.NewtonCreateCapsule(address, radius0, radius1, height, shapeID, offsetMatrix));
 	}
 
 	/**
@@ -94,14 +107,21 @@ public class NewtonWorld {
 		if (offsetMatrix.length != 16) {
 			throw new RuntimeException("offsetMatrix incorrect length");
 		}
-		try (MemorySession session = MemorySession.openConfined()) {
-			MemorySegment matrix = session.allocateArray(Newton_h.C_FLOAT, offsetMatrix);
-			return new NewtonCollision(Newton_h.NewtonCreateCapsule(address, radius0, radius1, height, shapeID, matrix));
+		try (Arena arena = Arena.openConfined()) {
+			MemorySegment matrix = arena.allocateArray(Newton.C_FLOAT, offsetMatrix);
+			return new NewtonCollision(Newton.NewtonCreateCapsule(address, radius0, radius1, height, shapeID, matrix));
 		}
 	}
 
 	public NewtonCollision createCapsule(float radius0, float radius1, float height, int shapeID) {
-		return new NewtonCollision(Newton_h.NewtonCreateCapsule(address, radius0, radius1, height, shapeID, MemoryAddress.NULL));
+		return new NewtonCollision(Newton.NewtonCreateCapsule(address, radius0, radius1, height, shapeID, MemorySegment.NULL));
+	}
+
+	public NewtonCollision createChamferCylinder(float radius,  float height,  int shapeID,  MemorySegment offsetMatrix) {
+		if (offsetMatrix.byteSize() != Newton.MAT4F.byteSize()) {
+			throw new RuntimeException("offsetMatrix incorrect size");
+		}
+		return new NewtonCollision(Newton.NewtonCreateChamferCylinder(address, radius, height, shapeID, offsetMatrix));
 	}
 
 	/**
@@ -116,154 +136,301 @@ public class NewtonWorld {
 		if (offsetMatrix.length != 16) {
 			throw new RuntimeException("offsetMatrix incorrect length");
 		}
-		try (MemorySession session = MemorySession.openConfined()) {
-			MemorySegment matrix = session.allocateArray(Newton_h.C_FLOAT, offsetMatrix);
-			return new NewtonCollision(Newton_h.NewtonCreateChamferCylinder(address, radius, height, shapeID, matrix));
+		try (Arena arena = Arena.openConfined()) {
+			MemorySegment matrix = arena.allocateArray(Newton.C_FLOAT, offsetMatrix);
+			return new NewtonCollision(Newton.NewtonCreateChamferCylinder(address, radius, height, shapeID, matrix));
 		}
 	}
 
 	public NewtonCollision createChamferCylinder(float radius,  float height,  int shapeID) {
-		return new NewtonCollision(Newton_h.NewtonCreateChamferCylinder(address, radius, height, shapeID, MemoryAddress.NULL));
+		return new NewtonCollision(Newton.NewtonCreateChamferCylinder(address, radius, height, shapeID, MemorySegment.NULL));
 	}
 
 	public NewtonCollision createCompoundCollision(int shapeID) {
-		return new NewtonCollision(Newton_h.NewtonCreateCompoundCollision(address, shapeID));
+		return new NewtonCollision(Newton.NewtonCreateCompoundCollision(address, shapeID));
 	}
 
 	public NewtonCollision createCompoundCollision(NewtonMesh mesh, float hullTolerance, int shapeID, int subShapeID) {
-		return new NewtonCollision(Newton_h.NewtonCreateCompoundCollisionFromMesh(address, mesh.address, hullTolerance, shapeID, subShapeID));
+		return new NewtonCollision(Newton.NewtonCreateCompoundCollisionFromMesh(address, mesh.address, hullTolerance, shapeID, subShapeID));
+	}
+
+	public NewtonCollision createCone(float radius,  float height,  int shapeID,  MemorySegment offsetMatrix) {
+		if (offsetMatrix.byteSize() != Newton.MAT4F.byteSize()) {
+			throw new RuntimeException("offsetMatrix incorrect size");
+		}
+		return new NewtonCollision(Newton.NewtonCreateCone(address, radius, height, shapeID, offsetMatrix));
 	}
 
 	public NewtonCollision createCone(float radius,  float height,  int shapeID,  float[] offsetMatrix) {
 		if (offsetMatrix.length != 16) {
 			throw new RuntimeException("offsetMatrix incorrect length");
 		}
-		try (MemorySession session = MemorySession.openConfined()) {
-			MemorySegment matrix = session.allocateArray(Newton_h.C_FLOAT, offsetMatrix);
-			return new NewtonCollision(Newton_h.NewtonCreateCone(address, radius, height, shapeID, matrix));
+		try (Arena arena = Arena.openConfined()) {
+			MemorySegment matrix = arena.allocateArray(Newton.C_FLOAT, offsetMatrix);
+			return new NewtonCollision(Newton.NewtonCreateCone(address, radius, height, shapeID, matrix));
 		}
 	}
 
 	public NewtonCollision createCone(float radius,  float height,  int shapeID) {
-		return new NewtonCollision(Newton_h.NewtonCreateCone(address, radius, height, shapeID, MemoryAddress.NULL));
+		return new NewtonCollision(Newton.NewtonCreateCone(address, radius, height, shapeID, MemorySegment.NULL));
+	}
+
+	public NewtonCollision createConvexHull(int count,  MemorySegment vertexCloud,  int strideInBytes,  float tolerance,  int shapeID,  MemorySegment offsetMatrix) {
+		if (offsetMatrix.byteSize() != Newton.MAT4F.byteSize()) {
+			throw new RuntimeException("offsetMatrix incorrect size");
+		}
+		return new NewtonCollision(Newton.NewtonCreateConvexHull(address, count, vertexCloud, strideInBytes, tolerance, shapeID, offsetMatrix));
+	}
+
+	public NewtonCollision createConvexHull(int count,  MemorySegment vertexCloud,  int strideInBytes,  float tolerance,  int shapeID) {
+		return new NewtonCollision(Newton.NewtonCreateConvexHull(address, count, vertexCloud, strideInBytes, tolerance, shapeID, MemorySegment.NULL));
 	}
 
 	public NewtonCollision createConvexHull(int count,  float[] vertexCloud,  int strideInBytes,  float tolerance,  int shapeID,  float[] offsetMatrix) {
 		if (offsetMatrix.length != 16) {
 			throw new RuntimeException("offsetMatrix incorrect length");
 		}
-		try (MemorySession session = MemorySession.openConfined()) {
-			MemorySegment matrix = session.allocateArray(Newton_h.C_FLOAT, offsetMatrix);
-			MemorySegment vertCloud = session.allocateArray(Newton_h.C_FLOAT, vertexCloud);
-			return new NewtonCollision(Newton_h.NewtonCreateConvexHull(address, count, vertCloud, strideInBytes, tolerance, shapeID, matrix));
+		try (Arena arena = Arena.openConfined()) {
+			MemorySegment matrix = arena.allocateArray(Newton.C_FLOAT, offsetMatrix);
+			MemorySegment vertCloud = arena.allocateArray(Newton.C_FLOAT, vertexCloud);
+			return new NewtonCollision(Newton.NewtonCreateConvexHull(address, count, vertCloud, strideInBytes, tolerance, shapeID, matrix));
 		}
 	}
 
 	public NewtonCollision createConvexHull(int count,  float[] vertexCloud,  int strideInBytes,  float tolerance,  int shapeID) {
-		try (MemorySession session = MemorySession.openConfined()) {
-			MemorySegment vertCloud = session.allocateArray(Newton_h.C_FLOAT, vertexCloud);
-			return new NewtonCollision(Newton_h.NewtonCreateConvexHull(address, count, vertCloud, strideInBytes, tolerance, shapeID, MemoryAddress.NULL));
+		try (Arena arena = Arena.openConfined()) {
+			MemorySegment vertCloud = arena.allocateArray(Newton.C_FLOAT, vertexCloud);
+			return new NewtonCollision(Newton.NewtonCreateConvexHull(address, count, vertCloud, strideInBytes, tolerance, shapeID, MemorySegment.NULL));
 		}
+	}
+
+	public NewtonCollision createCylinder(float radio0,  float radio1,  float height,  int shapeID,  MemorySegment offsetMatrix) {
+		if (offsetMatrix.byteSize() != Newton.MAT4F.byteSize()) {
+			throw new RuntimeException("offsetMatrix incorrect size");
+		}
+		return new NewtonCollision(Newton.NewtonCreateCylinder(address, radio0, radio1, height, shapeID, offsetMatrix));
 	}
 
 	public NewtonCollision createCylinder(float radio0,  float radio1,  float height,  int shapeID,  float[] offsetMatrix) {
 		if (offsetMatrix.length != 16) {
 			throw new RuntimeException("offsetMatrix incorrect length");
 		}
-		try (MemorySession session = MemorySession.openConfined()) {
-			MemorySegment matrix = session.allocateArray(Newton_h.C_FLOAT, offsetMatrix);
-			return new NewtonCollision(Newton_h.NewtonCreateCylinder(address, radio0, radio1, height, shapeID, matrix));
+		try (Arena arena = Arena.openConfined()) {
+			MemorySegment matrix = arena.allocateArray(Newton.C_FLOAT, offsetMatrix);
+			return new NewtonCollision(Newton.NewtonCreateCylinder(address, radio0, radio1, height, shapeID, matrix));
 		}
 	}
 
 	public NewtonCollision createCylinder(float radio0,  float radio1,  float height,  int shapeID) {
-		return new NewtonCollision(Newton_h.NewtonCreateCylinder(address, radio0, radio1, height, shapeID, MemoryAddress.NULL));
+		return new NewtonCollision(Newton.NewtonCreateCylinder(address, radio0, radio1, height, shapeID, MemorySegment.NULL));
+	}
+
+	public NewtonCollision createHeightField(int width,  int height,  int gridsDiagonals, int elevationDataType,  MemorySegment elevationMap,  MemorySegment attributeMap,  float verticalScale,  float horizontalScale_x,  float horizontalScale_z,  int shapeID) {
+		return new NewtonCollision(Newton.NewtonCreateHeightFieldCollision(address, width, height, gridsDiagonals, elevationDataType, elevationMap, attributeMap, verticalScale, horizontalScale_x, horizontalScale_z, shapeID));
 	}
 
 	public NewtonCollision createHeightField(int width,  int height,  int gridsDiagonals,  float[] elevationMap,  char[] attributeMap,  float verticalScale,  float horizontalScale_x,  float horizontalScale_z,  int shapeID) {
 		int elevationDataType = 0;
-		try (MemorySession session = MemorySession.openConfined()) {
-			MemorySegment elevationMapSegment = session.allocateArray(Newton_h.C_FLOAT, elevationMap);
-			MemorySegment attributeSeg = session.allocateArray(Newton_h.C_CHAR, new String(attributeMap).getBytes(StandardCharsets.UTF_8));
-			return new NewtonCollision(Newton_h.NewtonCreateHeightFieldCollision(address, width, height, gridsDiagonals, elevationDataType, elevationMapSegment, attributeSeg, verticalScale, horizontalScale_x, horizontalScale_z, shapeID));
+		try (Arena arena = Arena.openConfined()) {
+			MemorySegment elevationMapSegment = arena.allocateArray(Newton.C_FLOAT, elevationMap);
+			MemorySegment attributeSeg = arena.allocateArray(Newton.C_CHAR, new String(attributeMap).getBytes(StandardCharsets.UTF_8));
+			return new NewtonCollision(Newton.NewtonCreateHeightFieldCollision(address, width, height, gridsDiagonals, elevationDataType, elevationMapSegment, attributeSeg, verticalScale, horizontalScale_x, horizontalScale_z, shapeID));
 		}
 	}
 
 	public NewtonCollision createHeightField(int width,  int height,  int gridsDiagonals,  short[] elevationMap,  char[] attributeMap,  float verticalScale,  float horizontalScale_x,  float horizontalScale_z,  int shapeID) {
 		int elevationDataType = 1;
-		try (MemorySession session = MemorySession.openConfined()) {
-			MemorySegment elevationMapSegment = session.allocateArray(Newton_h.C_SHORT, elevationMap);
-			MemorySegment attributeSeg = session.allocateArray(Newton_h.C_CHAR, new String(attributeMap).getBytes(StandardCharsets.UTF_8));
-			return new NewtonCollision(Newton_h.NewtonCreateHeightFieldCollision(address, width, height, gridsDiagonals, elevationDataType, elevationMapSegment, attributeSeg, verticalScale, horizontalScale_x, horizontalScale_z, shapeID));
+		try (Arena arena = Arena.openConfined()) {
+			MemorySegment elevationMapSegment = arena.allocateArray(Newton.C_SHORT, elevationMap);
+			MemorySegment attributeSeg = arena.allocateArray(Newton.C_CHAR, new String(attributeMap).getBytes(StandardCharsets.UTF_8));
+			return new NewtonCollision(Newton.NewtonCreateHeightFieldCollision(address, width, height, gridsDiagonals, elevationDataType, elevationMapSegment, attributeSeg, verticalScale, horizontalScale_x, horizontalScale_z, shapeID));
 		}
 	}
 
 	public NewtonCollision createNullCollision() {
-		return new NewtonCollision(Newton_h.NewtonCreateNull(address));
+		return new NewtonCollision(Newton.NewtonCreateNull(address));
 	}
 
 	public NewtonCollision createSceneCollision(int shapeID) {
-		return new NewtonCollision(Newton_h.NewtonCreateSceneCollision(address, shapeID));
+		return new NewtonCollision(Newton.NewtonCreateSceneCollision(address, shapeID));
+	}
+
+	public NewtonCollision createSphere(float radius, int shapeID, MemorySegment offsetMatrix) {
+		if (offsetMatrix.byteSize() != Newton.MAT4F.byteSize()) {
+			throw new RuntimeException("offsetMatrix incorrect size");
+		}
+		return new NewtonCollision(Newton.NewtonCreateSphere(address, radius, shapeID, offsetMatrix));
 	}
 
 	public NewtonCollision createSphere(float radius, int shapeID, float[] offsetMatrix) {
 		if (offsetMatrix.length != 16) {
 			throw new RuntimeException("offsetMatrix incorrect length");
 		}
-		try (MemorySession session = MemorySession.openConfined()) {
-			MemorySegment matrix = session.allocateArray(Newton_h.C_FLOAT, offsetMatrix);
-			return new NewtonCollision(Newton_h.NewtonCreateSphere(address, radius, shapeID, matrix));
+		try (Arena arena = Arena.openConfined()) {
+			MemorySegment matrix = arena.allocateArray(Newton.C_FLOAT, offsetMatrix);
+			return new NewtonCollision(Newton.NewtonCreateSphere(address, radius, shapeID, matrix));
 		}
 	}
 
 	public NewtonCollision createSphere(float radius, int shapeID) {
-		return new NewtonCollision(Newton_h.NewtonCreateSphere(address, radius, shapeID, MemoryAddress.NULL));
+		return new NewtonCollision(Newton.NewtonCreateSphere(address, radius, shapeID, MemorySegment.NULL));
 	}
 
 	public NewtonCollision createTreeCollision(int shapeID) {
-		return new NewtonCollision(Newton_h.NewtonCreateTreeCollision(address, shapeID));
+		return new NewtonCollision(Newton.NewtonCreateTreeCollision(address, shapeID));
 	}
 
 	public NewtonCollision createTreeCollisionFromMesh(NewtonMesh mesh, int shapeID) {
-		return new NewtonCollision(Newton_h.NewtonCreateTreeCollisionFromMesh(address, mesh.address, shapeID));
+		return new NewtonCollision(Newton.NewtonCreateTreeCollisionFromMesh(address, mesh.address, shapeID));
+	}
+
+	public NewtonCollisionAggregate createCollisionAggregate() {
+		return new NewtonCollisionAggregate(Newton.NewtonCollisionAggregateCreate(address));
+	}
+
+	public NewtonBody createAsymetricDynamicBody(NewtonCollision collision, MemorySegment matrix) {
+		if (matrix.byteSize() != Newton.MAT4F.byteSize()) {
+			throw new RuntimeException("offsetMatrix incorrect size");
+		}
+		return  new NewtonBody(Newton.NewtonCreateAsymetricDynamicBody(address, collision.address, matrix));
 	}
 
 	public NewtonBody createAsymetricDynamicBody(NewtonCollision collision, float[] matrix) {
 		if (matrix.length != 16) {
 			throw new RuntimeException("matrix incorrect length");
 		}
-		try (MemorySession session = MemorySession.openConfined()) {
-			MemorySegment matrixSeg = session.allocateArray(Newton_h.C_FLOAT, matrix);
-			return  new NewtonBody(Newton_h.NewtonCreateAsymetricDynamicBody(address, collision.address, matrixSeg));
+		try (Arena arena = Arena.openConfined()) {
+			MemorySegment matrixSeg = arena.allocateArray(Newton.C_FLOAT, matrix);
+			return  new NewtonBody(Newton.NewtonCreateAsymetricDynamicBody(address, collision.address, matrixSeg));
 		}
+	}
+
+	public NewtonBody createAsymetricDynamicBody(MemorySegment matrix) {
+		if (matrix.byteSize() != Newton.MAT4F.byteSize()) {
+			throw new RuntimeException("offsetMatrix incorrect size");
+		}
+		return  new NewtonBody(Newton.NewtonCreateAsymetricDynamicBody(address, MemorySegment.NULL, matrix));
+	}
+
+	public NewtonBody createAsymetricDynamicBody(float[] matrix) {
+		if (matrix.length != 16) {
+			throw new RuntimeException("matrix incorrect length");
+		}
+		try (Arena arena = Arena.openConfined()) {
+			MemorySegment matrixSeg = arena.allocateArray(Newton.C_FLOAT, matrix);
+			return  new NewtonBody(Newton.NewtonCreateAsymetricDynamicBody(address, MemorySegment.NULL, matrixSeg));
+		}
+	}
+
+	public NewtonBody createDynamicBody(NewtonCollision collision, MemorySegment matrix) {
+		if (matrix.byteSize() != Newton.MAT4F.byteSize()) {
+			throw new RuntimeException("offsetMatrix incorrect size");
+		}
+		return  new NewtonBody(Newton.NewtonCreateDynamicBody(address, collision.address, matrix));
 	}
 
 	public NewtonBody createDynamicBody(NewtonCollision collision, float[] matrix) {
 		if (matrix.length != 16) {
 			throw new RuntimeException("matrix incorrect length");
 		}
-		try (MemorySession session = MemorySession.openConfined()) {
-			MemorySegment matrixSeg = session.allocateArray(Newton_h.C_FLOAT, matrix);
-			return  new NewtonBody(Newton_h.NewtonCreateDynamicBody(address, collision.address, matrixSeg));
+		try (Arena arena = Arena.openConfined()) {
+			MemorySegment matrixSeg = arena.allocateArray(Newton.C_FLOAT, matrix);
+			return  new NewtonBody(Newton.NewtonCreateDynamicBody(address, collision.address, matrixSeg));
 		}
+	}
+
+	public NewtonBody createDynamicBody(MemorySegment matrix) {
+		if (matrix.byteSize() != Newton.MAT4F.byteSize()) {
+			throw new RuntimeException("offsetMatrix incorrect size");
+		}
+		return  new NewtonBody(Newton.NewtonCreateDynamicBody(address, MemorySegment.NULL, matrix));
+	}
+
+	public NewtonBody createDynamicBody(float[] matrix) {
+		if (matrix.length != 16) {
+			throw new RuntimeException("matrix incorrect length");
+		}
+		try (Arena arena = Arena.openConfined()) {
+			MemorySegment matrixSeg = arena.allocateArray(Newton.C_FLOAT, matrix);
+			return  new NewtonBody(Newton.NewtonCreateDynamicBody(address, MemorySegment.NULL, matrixSeg));
+		}
+	}
+
+	public NewtonBody createKinematicBody(NewtonCollision collision, MemorySegment matrix) {
+		if (matrix.byteSize() != Newton.MAT4F.byteSize()) {
+			throw new RuntimeException("offsetMatrix incorrect size");
+		}
+		return  new NewtonBody(Newton.NewtonCreateKinematicBody(address, collision.address, matrix));
 	}
 
 	public NewtonBody createKinematicBody(NewtonCollision collision, float[] matrix) {
 		if (matrix.length != 16) {
 			throw new RuntimeException("matrix incorrect length");
 		}
-		try (MemorySession session = MemorySession.openConfined()) {
-			MemorySegment matrixSeg = session.allocateArray(Newton_h.C_FLOAT, matrix);
-			return  new NewtonBody(Newton_h.NewtonCreateKinematicBody(address, collision.address, matrixSeg));
+		try (Arena arena = Arena.openConfined()) {
+			MemorySegment matrixSeg = arena.allocateArray(Newton.C_FLOAT, matrix);
+			return  new NewtonBody(Newton.NewtonCreateKinematicBody(address, collision.address, matrixSeg));
 		}
 	}
-	
+
+	public NewtonBody createKinematicBody(MemorySegment matrix) {
+		if (matrix.byteSize() != Newton.MAT4F.byteSize()) {
+			throw new RuntimeException("offsetMatrix incorrect size");
+		}
+		return  new NewtonBody(Newton.NewtonCreateKinematicBody(address, MemorySegment.NULL, matrix));
+	}
+
+	public NewtonBody createKinematicBody(float[] matrix) {
+		if (matrix.length != 16) {
+			throw new RuntimeException("matrix incorrect length");
+		}
+		try (Arena arena = Arena.openConfined()) {
+			MemorySegment matrixSeg = arena.allocateArray(Newton.C_FLOAT, matrix);
+			return  new NewtonBody(Newton.NewtonCreateKinematicBody(address, MemorySegment.NULL, matrixSeg));
+		}
+	}
+
+	public NewtonMesh createConvexHullMesh(int count, MemorySegment vertexCloud, int strideInBytes, float tolerance) {
+		return new NewtonMesh(Newton.NewtonMeshCreateConvexHull(address, count, vertexCloud, strideInBytes, tolerance));
+	}
+
+	public NewtonMesh createConvexHullMesh(int count, float[] vertexCloud, int strideInBytes, float tolerance) {
+		try (Arena arena = Arena.openConfined()) {
+			MemorySegment vertCloud = arena.allocateArray(Newton.C_FLOAT, vertexCloud);
+			return new NewtonMesh(Newton.NewtonMeshCreateConvexHull(address, count, vertCloud, strideInBytes, tolerance));
+		}
+	}
+
+	public NewtonMesh createVoronoiConvexDecomposition(int count, MemorySegment vertexCloud, int strideInBytes, int materialID, MemorySegment textureMatrix) {
+		return new NewtonMesh(Newton.NewtonMeshCreateVoronoiConvexDecomposition(address, count, vertexCloud, strideInBytes, materialID, textureMatrix));
+	}
+
+	public NewtonMesh createVoronoiConvexDecomposition(int count, float[] vertexCloud, int strideInBytes, int materialID, float[] textureMatrix) {
+		try (Arena arena = Arena.openConfined()) {
+			MemorySegment vertCloud = arena.allocateArray(Newton.C_FLOAT, vertexCloud);
+			MemorySegment textMatrix = arena.allocateArray(Newton.C_FLOAT, textureMatrix);
+			return new NewtonMesh(Newton.NewtonMeshCreateVoronoiConvexDecomposition(address, count, vertCloud, strideInBytes, materialID, textMatrix));
+		}
+	}
+
+	public NewtonMesh createMeshFromSerialization(NewtonDeserializeCallback deserializFunc, MemorySegment serializeHandle, SegmentScope scope) {
+		MemorySegment func = NewtonDeserializeCallback.allocate(deserializFunc, scope);
+		return new NewtonMesh(Newton.NewtonMeshCreateFromSerialization(address, func, serializeHandle));
+	}
+
+	public NewtonMesh loadTetrahedraMesh(String filename) {
+		try (Arena arena = Arena.openConfined()) {
+			MemorySegment cString = arena.allocateUtf8String(filename);
+			return new NewtonMesh(Newton.NewtonMeshLoadTetrahedraMesh(address, cString));
+		}
+	}
+
 	/**
 	 * Gets the version of Newton
 	 * @return Newton API Version
 	 */
 	public static int getWorldVersion() {
-		return Newton_h.NewtonWorldGetVersion(EMPTY);
+		return Newton.NewtonWorldGetVersion();
 	}
 	
 	/**
@@ -271,7 +438,7 @@ public class NewtonWorld {
 	 * @return size of floats in bytes
 	 */
 	public static int getFloatSizes() {
-		return Newton_h.NewtonWorldFloatSize(EMPTY);
+		return Newton.NewtonWorldFloatSize();
 	}
 	
 	/**
@@ -279,480 +446,509 @@ public class NewtonWorld {
 	 * @return amount of memory used in bytes
 	 */
 	public static int getMemoryUsed() {
-		return Newton_h.NewtonGetMemoryUsed(EMPTY);
+		return Newton.NewtonGetMemoryUsed();
 	}
 	
 	/**
 	 * Set the memory system for Newton library
 	 * @param alloc - allocation function
 	 * @param free - deallocation function
-	 * @param session - ResourceScope for allocating upcall stubs
+	 * @param scope - ResourceScope for allocating upcall stubs
 	 */
-	public static void setMemorySystem(NewtonAllocMemory alloc, NewtonFreeMemory free, MemorySession session) {
-		MemorySegment allocFunc = NewtonAllocMemory.allocate(alloc, session);
-		MemorySegment freeFunc = NewtonFreeMemory.allocate(free, session);
-		Newton_h.NewtonSetMemorySystem(allocFunc, freeFunc);
+	public static void setMemorySystem(NewtonAllocMemory alloc, NewtonFreeMemory free, SegmentScope scope) {
+		MemorySegment allocFunc = NewtonAllocMemory.allocate(alloc, scope);
+		MemorySegment freeFunc = NewtonFreeMemory.allocate(free, scope);
+		Newton.NewtonSetMemorySystem(allocFunc, freeFunc);
 	}
 	
 	/**
 	 * Allocates memory with Newton allocator
 	 * @param sizeInBytes - size in bytes of memory to be allocated
-	 * @return MemoryAddress to the allocated memory
+	 * @return MemorySegment to the allocated memory
 	 */
-	public static MemoryAddress newtonAlloc(int sizeInBytes) {
-		return Newton_h.NewtonAlloc(sizeInBytes);
+	public static MemorySegment newtonAlloc(int sizeInBytes) {
+		return Newton.NewtonAlloc(sizeInBytes);
 	}
 	
 	/**
 	 * Allocates memory with Newton allocator
 	 * @param sizeInBytes - size in bytes of memory to be allocated
-	 * @param session - ResourceScope for the returned MemorySegment
+	 * @param scope - ResourceScope for the returned MemorySegment
 	 * @return MemorySegment representing the allocated memory
 	 */
-	public static MemorySegment newtonAlloc(int sizeInBytes, MemorySession session) {
-		return MemorySegment.ofAddress(Newton_h.NewtonAlloc(sizeInBytes), sizeInBytes, session);
+	public static MemorySegment newtonAlloc(int sizeInBytes, SegmentScope scope) {
+		return MemorySegment.ofAddress(Newton.NewtonAlloc(sizeInBytes).address(), sizeInBytes, scope);
 	}
 	
 	/**
 	 * Allocates memory with Newton allocator and given MemoryLayout
 	 * @param layout - MemoryLayout to be allocated
-	 * @return MemoryAddress to the allocated memory
+	 * @return MemorySegment to the allocated memory
 	 */
-	public static MemoryAddress newtonAlloc(MemoryLayout layout) {
-		return Newton_h.NewtonAlloc((int) layout.byteSize());
+	public static MemorySegment newtonAlloc(MemoryLayout layout) {
+		return Newton.NewtonAlloc((int) layout.byteSize());
 	}
 	
 	/**
 	 * Allocates memory with Newton allocator and given MemoryLayout
 	 * @param layout - MemoryLayout to be allocated
-	 * @param session - ResourceScope for the returned MemorySegment
+	 * @param scope - ResourceScope for the returned MemorySegment
 	 * @return MemorySegment representing the allocated memory
 	 */
-	public static MemorySegment newtonAlloc(MemoryLayout layout, MemorySession session) {
-		return MemorySegment.ofAddress(Newton_h.NewtonAlloc((int) layout.byteSize()), layout.byteSize(), session);
+	public static MemorySegment newtonAlloc(MemoryLayout layout, SegmentScope scope) {
+		return MemorySegment.ofAddress(Newton.NewtonAlloc((int) layout.byteSize()).address(), layout.byteSize(), scope);
 	}
 	
 	/**
 	 * Frees memory allocated by Newton
 	 * @param ptr - pointer to the memory create by Newton
 	 */
-	public static void newtonFree(Addressable ptr) {
-		Newton_h.NewtonFree(ptr);
+	public static void newtonFree(MemorySegment ptr) {
+		Newton.NewtonFree(ptr);
 	}
 	
 	/**
 	 * Destroys the current Newton object.
 	 */
 	public void destroy() {
-		Newton_h.NewtonDestroy(address);
+		Newton.NewtonDestroy(address);
 	}
 	
-	public NewtonPostUpdateCallback getPostUpdateCallback(MemorySession session) {
-		return NewtonPostUpdateCallback.ofAddress(Newton_h.NewtonGetPostUpdateCallback(address), session);
+	public NewtonPostUpdateCallback getPostUpdateCallback(SegmentScope scope) {
+		return NewtonPostUpdateCallback.ofAddress(Newton.NewtonGetPostUpdateCallback(address), scope);
 	}
 	
-	public void setPostUpdateCallback(NewtonPostUpdateCallback callback, MemorySession session) {
-		MemorySegment callbackFunc = NewtonPostUpdateCallback.allocate(callback, session);
-		Newton_h.NewtonSetPostUpdateCallback(address, callbackFunc);
+	public void setPostUpdateCallback(NewtonPostUpdateCallback callback, SegmentScope scope) {
+		MemorySegment callbackFunc = NewtonPostUpdateCallback.allocate(callback, scope);
+		Newton.NewtonSetPostUpdateCallback(address, callbackFunc);
 	}
 	
 	public void loadPlugins(String pluginPath) {
-		try (MemorySession session = MemorySession.openConfined()) {
-			MemorySegment path = session.allocateUtf8String(pluginPath);
-			Newton_h.NewtonLoadPlugins(address, path);
+		try (Arena arena = Arena.openConfined()) {
+			MemorySegment path = arena.allocateUtf8String(pluginPath);
+			Newton.NewtonLoadPlugins(address, path);
 		}
 	}
 	
 	public void unloadPlugins() {
-		Newton_h.NewtonUnloadPlugins(address);
+		Newton.NewtonUnloadPlugins(address);
 	}
 	
-	public MemoryAddress getCurrentPlugin() {
-		return Newton_h.NewtonCurrentPlugin(address);
+	public MemorySegment getCurrentPlugin() {
+		return Newton.NewtonCurrentPlugin(address);
 	}
 	
-	public MemoryAddress getFirstPlugin() {
-		return Newton_h.NewtonGetFirstPlugin(address);
+	public MemorySegment getFirstPlugin() {
+		return Newton.NewtonGetFirstPlugin(address);
 	}
 	
-	public MemoryAddress getNextPlugin(MemoryAddress curPlugin) {
-		return Newton_h.NewtonGetNextPlugin(address, curPlugin);
+	public MemorySegment getNextPlugin(MemorySegment curPlugin) {
+		return Newton.NewtonGetNextPlugin(address, curPlugin);
 	}
 	
-	public MemoryAddress getPreferedPlugin() {
-		return Newton_h.NewtonGetPreferedPlugin(address);
+	public MemorySegment getPreferedPlugin() {
+		return Newton.NewtonGetPreferedPlugin(address);
 	}
 	
 	public float getContactMergeTolerance() {
-		return Newton_h.NewtonGetContactMergeTolerance(address);
+		return Newton.NewtonGetContactMergeTolerance(address);
 	}
 	
 	public void setContactMergeTolerance(float tolerance) {
-		Newton_h.NewtonSetContactMergeTolerance(address, tolerance);
+		Newton.NewtonSetContactMergeTolerance(address, tolerance);
 	}
 	
 	public void invalidateCache() {
-		Newton_h.NewtonInvalidateCache(address);
+		Newton.NewtonInvalidateCache(address);
 	}
 	
 	public void setSolverIterations(int model) {
-		Newton_h.NewtonSetSolverIterations(address, model);
+		Newton.NewtonSetSolverIterations(address, model);
 	}
 	
 	public int getSolverIterations() {
-		return Newton_h.NewtonGetSolverIterations(address);
+		return Newton.NewtonGetSolverIterations(address);
 	}
 	
 	public void setParallelSolverOnLargeIsland(int mode) {
-		Newton_h.NewtonSetParallelSolverOnLargeIsland(address, mode);
+		Newton.NewtonSetParallelSolverOnLargeIsland(address, mode);
 	}
 	
 	public int getParallelSolverOnLargeIsland() {
-		return Newton_h.NewtonGetParallelSolverOnLargeIsland(address);
+		return Newton.NewtonGetParallelSolverOnLargeIsland(address);
 	}
 	
 	public int getBroadphaseAlgorithm() {
-		return Newton_h.NewtonGetBroadphaseAlgorithm(address);
+		return Newton.NewtonGetBroadphaseAlgorithm(address);
 	}
 	
 	public void selectBroadphaseAlgorithm(int algorithmType) {
-		Newton_h.NewtonSelectBroadphaseAlgorithm(address, algorithmType);
+		Newton.NewtonSelectBroadphaseAlgorithm(address, algorithmType);
 	}
 	
 	public void resetBroadphase() {
-		Newton_h.NewtonResetBroadphase(address);
+		Newton.NewtonResetBroadphase(address);
 	}
 	
 	public void update(float timestep) {
-		Newton_h.NewtonUpdate(address, timestep);
+		Newton.NewtonUpdate(address, timestep);
 	}
 	
 	public void updateAsync(float timestep) {
-		Newton_h.NewtonUpdateAsync(address, timestep);
+		Newton.NewtonUpdateAsync(address, timestep);
 	}
 	
 	public void waitForUpdateToFinish() {
-		Newton_h.NewtonWaitForUpdateToFinish(address);
+		Newton.NewtonWaitForUpdateToFinish(address);
 	}
 	
 	public int getNumberOfSubsteps() {
-		return Newton_h.NewtonGetNumberOfSubsteps(address);
+		return Newton.NewtonGetNumberOfSubsteps(address);
 	}
 	
 	public void setNumberOfSubsteps(int substeps) {
-		Newton_h.NewtonSetNumberOfSubsteps(address, substeps);
+		Newton.NewtonSetNumberOfSubsteps(address, substeps);
 	}
 	
 	public float getLastUpdateTime() {
-		return Newton_h.NewtonGetLastUpdateTime(address);
+		return Newton.NewtonGetLastUpdateTime(address);
 	}
 	
-	public void serializeToFile(String filename, NewtonOnBodySerializationCallback bodyCallback, Addressable bodyUserData,
-								MemorySession session) {
-		MemorySegment filePath = session.allocateUtf8String(filename);
-		MemorySegment callbackFunc = NewtonOnBodySerializationCallback.allocate(bodyCallback, session);
-		Newton_h.NewtonSerializeToFile(address, filePath, callbackFunc, bodyUserData);
+	public void serializeToFile(String filename, NewtonOnBodySerializationCallback bodyCallback, MemorySegment bodyUserData,
+								SegmentScope scope) {
+		try (Arena arena = Arena.openConfined()) {
+			MemorySegment filePath = arena.allocateUtf8String(filename);
+			MemorySegment callbackFunc = NewtonOnBodySerializationCallback.allocate(bodyCallback, scope);
+			Newton.NewtonSerializeToFile(address, filePath, callbackFunc, bodyUserData);
+		}
 	}
 	
-	public void deserializeFromFile(String filename, NewtonOnBodyDeserializationCallback bodyCallback, Addressable bodyUserData,
-									MemorySession session) {
-		MemorySegment filePath = session.allocateUtf8String(filename);
-		MemorySegment callbackFunc = NewtonOnBodyDeserializationCallback.allocate(bodyCallback, session);
-		Newton_h.NewtonDeserializeFromFile(address, filePath, callbackFunc, bodyUserData);
+	public void deserializeFromFile(String filename, NewtonOnBodyDeserializationCallback bodyCallback, MemorySegment bodyUserData,
+									SegmentScope scope) {
+		try (Arena arena = Arena.openConfined()) {
+			MemorySegment filePath = arena.allocateUtf8String(filename);
+			MemorySegment callbackFunc = NewtonOnBodyDeserializationCallback.allocate(bodyCallback, scope);
+			Newton.NewtonDeserializeFromFile(address, filePath, callbackFunc, bodyUserData);
+		}
 	}
 	
-	public void serializeScene(NewtonOnBodySerializationCallback bodyCallback, Addressable bodyUserData, NewtonSerializeCallback serializeCallback, Addressable serializeHandle,
-							   MemorySession session) {
-		MemorySegment bodyFunc = NewtonOnBodySerializationCallback.allocate(bodyCallback, session);
-		MemorySegment serializeFunc = NewtonSerializeCallback.allocate(serializeCallback, session);
-		Newton_h.NewtonSerializeScene(address, bodyFunc, bodyUserData, serializeFunc, serializeHandle);
+	public void serializeScene(NewtonOnBodySerializationCallback bodyCallback, MemorySegment bodyUserData, NewtonSerializeCallback serializeCallback, MemorySegment serializeHandle,
+							   SegmentScope scope) {
+		MemorySegment bodyFunc = NewtonOnBodySerializationCallback.allocate(bodyCallback, scope);
+		MemorySegment serializeFunc = NewtonSerializeCallback.allocate(serializeCallback, scope);
+		Newton.NewtonSerializeScene(address, bodyFunc, bodyUserData, serializeFunc, serializeHandle);
 	}
 	
-	public void deserializeScene(NewtonOnBodyDeserializationCallback bodyCallback, Addressable bodyUserData, NewtonDeserializeCallback serializeCallback, Addressable serializeHandle,
-								 MemorySession session) {
-		MemorySegment bodyFunc = NewtonOnBodyDeserializationCallback.allocate(bodyCallback, session);
-		MemorySegment deserializeFunc = NewtonDeserializeCallback.allocate(serializeCallback, session);
-		Newton_h.NewtonDeserializeScene(address, bodyFunc, bodyUserData, deserializeFunc, serializeHandle);
+	public void deserializeScene(NewtonOnBodyDeserializationCallback bodyCallback, MemorySegment bodyUserData, NewtonDeserializeCallback serializeCallback, MemorySegment serializeHandle,
+								 SegmentScope scope) {
+		MemorySegment bodyFunc = NewtonOnBodyDeserializationCallback.allocate(bodyCallback, scope);
+		MemorySegment deserializeFunc = NewtonDeserializeCallback.allocate(serializeCallback, scope);
+		Newton.NewtonDeserializeScene(address, bodyFunc, bodyUserData, deserializeFunc, serializeHandle);
 	}
 	
 	public NewtonBody findSerializedBody(int bodySerializedID) {
-		MemoryAddress body = Newton_h.NewtonFindSerializedBody(address, bodySerializedID);
-		int bodyType = Newton_h.NewtonBodyGetType(body);
+		MemorySegment body = Newton.NewtonFindSerializedBody(address, bodySerializedID);
+		int bodyType = Newton.NewtonBodyGetType(body);
 		return new NewtonBody(body, bodyType);
 	}
 	
 	public void setJointSerializationCallbacks(NewtonOnJointSerializationCallback serializeJoint, NewtonOnJointDeserializationCallback deserializeJoint,
-											   MemorySession session) {
-		MemorySegment serializeFunc = NewtonOnJointSerializationCallback.allocate(serializeJoint, session);
-		MemorySegment deserializeFunc = NewtonOnJointDeserializationCallback.allocate(deserializeJoint, session);
-		Newton_h.NewtonSetJointSerializationCallbacks(address, serializeFunc, deserializeFunc);
+											   SegmentScope scope) {
+		MemorySegment serializeFunc = NewtonOnJointSerializationCallback.allocate(serializeJoint, scope);
+		MemorySegment deserializeFunc = NewtonOnJointDeserializationCallback.allocate(deserializeJoint, scope);
+		Newton.NewtonSetJointSerializationCallbacks(address, serializeFunc, deserializeFunc);
 	}
 	
-	public JointSerializationCallbacks getJointSerializationCallbacks(MemorySession session) {
-		MemoryAddress serializePtr = MemoryAddress.NULL;
-		MemoryAddress deserializePtr = MemoryAddress.NULL;
-		Newton_h.NewtonGetJointSerializationCallbacks(address, serializePtr, deserializePtr);
-		NewtonOnJointSerializationCallback serializeCallback = NewtonOnJointSerializationCallback.ofAddress(serializePtr, session);
-		NewtonOnJointDeserializationCallback deserializeCallback = NewtonOnJointDeserializationCallback.ofAddress(deserializePtr, session);
+	public JointSerializationCallbacks getJointSerializationCallbacks(SegmentScope scope) {
+		MemorySegment serializePtr = MemorySegment.NULL;
+		MemorySegment deserializePtr = MemorySegment.NULL;
+		Newton.NewtonGetJointSerializationCallbacks(address, serializePtr, deserializePtr);
+		NewtonOnJointSerializationCallback serializeCallback = NewtonOnJointSerializationCallback.ofAddress(serializePtr, scope);
+		NewtonOnJointDeserializationCallback deserializeCallback = NewtonOnJointDeserializationCallback.ofAddress(deserializePtr, scope);
 		return new JointSerializationCallbacks(serializeCallback, deserializeCallback);
 	}
 	
 	public void lockCriticalSection(int threadIndex) {
-		Newton_h.NewtonWorldCriticalSectionLock(address, threadIndex);
+		Newton.NewtonWorldCriticalSectionLock(address, threadIndex);
 	}
 	
 	public void unlockCriticalSection() {
-		Newton_h.NewtonWorldCriticalSectionUnlock(address);
+		Newton.NewtonWorldCriticalSectionUnlock(address);
 	}
 	
 	public void setThreadCount(int threads) {
-		Newton_h.NewtonSetThreadsCount(address, threads);
+		Newton.NewtonSetThreadsCount(address, threads);
 	}
 	
 	public int getThreadCount() {
-		return Newton_h.NewtonGetThreadsCount(address);
+		return Newton.NewtonGetThreadsCount(address);
 	}
 	
 	public int getMaxThreadCount() {
-		return Newton_h.NewtonGetMaxThreadsCount(address);
+		return Newton.NewtonGetMaxThreadsCount(address);
 	}
 	
-	public void dispatchThreadJob(NewtonJobTask task, Addressable userData, String functionName, MemorySession session) {
-		MemorySegment function_name = session.allocateUtf8String(functionName);
-		MemorySegment taskFunc = NewtonJobTask.allocate(task, session);
-		Newton_h.NewtonDispachThreadJob(address, taskFunc, userData, function_name);
+	public void dispatchThreadJob(NewtonJobTask task, MemorySegment userData, String functionName, SegmentScope scope) {
+		try (Arena arena = Arena.openConfined()) {
+			MemorySegment function_name = arena.allocateUtf8String(functionName);
+			MemorySegment taskFunc = NewtonJobTask.allocate(task, scope);
+			Newton.NewtonDispachThreadJob(address, taskFunc, userData, function_name);
+		}
 	}
 	
 	public void syncThreadJobs() {
-		Newton_h.NewtonSyncThreadJobs(address);
+		Newton.NewtonSyncThreadJobs(address);
 	}
 	
-	public void setIslandUpdateEvent(NewtonIslandUpdate islandUpdate, MemorySession session) {
-		MemorySegment islandUpdateFunc = NewtonIslandUpdate.allocate(islandUpdate, session);
-		Newton_h.NewtonSetIslandUpdateEvent(address, islandUpdateFunc);
+	public void setIslandUpdateEvent(NewtonIslandUpdate islandUpdate, SegmentScope scope) {
+		MemorySegment islandUpdateFunc = NewtonIslandUpdate.allocate(islandUpdate, scope);
+		Newton.NewtonSetIslandUpdateEvent(address, islandUpdateFunc);
 	}
 	
-	public void forEachJoint(NewtonJointIterator callback, Addressable userData, MemorySession session) {
-		MemorySegment callbackFunc = NewtonJointIterator.allocate(callback, session);
-		Newton_h.NewtonWorldForEachJointDo(address, callbackFunc, userData);
+	public void forEachJoint(NewtonJointIterator callback, MemorySegment userData, SegmentScope scope) {
+		MemorySegment callbackFunc = NewtonJointIterator.allocate(callback, scope);
+		Newton.NewtonWorldForEachJointDo(address, callbackFunc, userData);
 	}
 	
-	public void forEachBodyInAABB(float[] p0, float[] p1, NewtonBodyIterator callback, Addressable userData, MemorySession session) {
-		MemorySegment p0Segment = session.allocateArray(Newton_h.C_FLOAT, p0);
-		MemorySegment p1Segment = session.allocateArray(Newton_h.C_FLOAT, p1);
-		MemorySegment callbackFunc = NewtonBodyIterator.allocate(callback, session);
-		Newton_h.NewtonWorldForEachBodyInAABBDo(address, p0Segment, p1Segment, callbackFunc, userData);
+	public void forEachBodyInAABB(float[] p0, float[] p1, NewtonBodyIterator callback, MemorySegment userData, SegmentScope scope) {
+		try (Arena arena = Arena.openConfined()) {
+			MemorySegment p0Segment = arena.allocateArray(Newton.C_FLOAT, p0);
+			MemorySegment p1Segment = arena.allocateArray(Newton.C_FLOAT, p1);
+			MemorySegment callbackFunc = NewtonBodyIterator.allocate(callback, scope);
+			Newton.NewtonWorldForEachBodyInAABBDo(address, p0Segment, p1Segment, callbackFunc, userData);
+		}
 	}
 	
-	public void setUserData(Addressable userData) {
-		Newton_h.NewtonWorldSetUserData(address, userData);
+	public void setUserData(MemorySegment userData) {
+		Newton.NewtonWorldSetUserData(address, userData);
 	}
 	
-	public MemoryAddress getUserData() {
-		return Newton_h.NewtonWorldGetUserData(address);
+	public MemorySegment getUserData() {
+		return Newton.NewtonWorldGetUserData(address);
 	}
 	
-	public MemoryAddress addListener(String nameId, Addressable listenerUserData, MemorySession session) {
-		MemorySegment nameIdSegment = session.allocateUtf8String(nameId);
-		return Newton_h.NewtonWorldAddListener(address, nameIdSegment, listenerUserData);
+	public MemorySegment addListener(String nameId, MemorySegment listenerUserData) {
+		try (Arena arena = Arena.openConfined()) {
+			MemorySegment nameIdSegment = arena.allocateUtf8String(nameId);
+			return Newton.NewtonWorldAddListener(address, nameIdSegment, listenerUserData);
+		}
 	}
 	
-	public MemoryAddress getListener(String nameId, MemorySession session) {
-		MemorySegment nameIdSegment = session.allocateUtf8String(nameId);
-		return Newton_h.NewtonWorldGetListener(address, nameIdSegment);
+	public MemorySegment getListener(String nameId) {
+		try (Arena arena = Arena.openConfined()) {
+			MemorySegment nameIdSegment = arena.allocateUtf8String(nameId);
+			return Newton.NewtonWorldGetListener(address, nameIdSegment);
+		}
 	}
 	
-	public void listenerSetDebugCallback(Addressable listener, NewtonWorldListenerDebugCallback callback, MemorySession session) {
-		MemorySegment callbackFunc = NewtonWorldListenerDebugCallback.allocate(callback, session);
-		Newton_h.NewtonWorldListenerSetDebugCallback(address, listener, callbackFunc);
+	public void listenerSetDebugCallback(MemorySegment listener, NewtonWorldListenerDebugCallback callback, SegmentScope scope) {
+		MemorySegment callbackFunc = NewtonWorldListenerDebugCallback.allocate(callback, scope);
+		Newton.NewtonWorldListenerSetDebugCallback(address, listener, callbackFunc);
 	}
 	
-	public void listenerSetPostStepCallback(Addressable listener, NewtonWorldUpdateListenerCallback callback, MemorySession session) {
-		MemorySegment callbackFunc = NewtonWorldUpdateListenerCallback.allocate(callback, session);
-		Newton_h.NewtonWorldListenerSetPostStepCallback(address, listener, callbackFunc);
+	public void listenerSetPostStepCallback(MemorySegment listener, NewtonWorldUpdateListenerCallback callback, SegmentScope scope) {
+		MemorySegment callbackFunc = NewtonWorldUpdateListenerCallback.allocate(callback, scope);
+		Newton.NewtonWorldListenerSetPostStepCallback(address, listener, callbackFunc);
 	}
 	
-	public void listenerSetPreUpdateCallback(Addressable listener, NewtonWorldUpdateListenerCallback callback, MemorySession session) {
-		MemorySegment callbackFunc = NewtonWorldUpdateListenerCallback.allocate(callback, session);
-		Newton_h.NewtonWorldListenerSetPreUpdateCallback(address, listener, callbackFunc);
+	public void listenerSetPreUpdateCallback(MemorySegment listener, NewtonWorldUpdateListenerCallback callback, SegmentScope scope) {
+		MemorySegment callbackFunc = NewtonWorldUpdateListenerCallback.allocate(callback, scope);
+		Newton.NewtonWorldListenerSetPreUpdateCallback(address, listener, callbackFunc);
 	}
 	
-	public void listenerSetPostUpdateCallback(Addressable listener, NewtonWorldUpdateListenerCallback callback, MemorySession session) {
-		MemorySegment callbackFunc = NewtonWorldUpdateListenerCallback.allocate(callback, session);
-		Newton_h.NewtonWorldListenerSetPostUpdateCallback(address, listener, callbackFunc);
+	public void listenerSetPostUpdateCallback(MemorySegment listener, NewtonWorldUpdateListenerCallback callback, SegmentScope scope) {
+		MemorySegment callbackFunc = NewtonWorldUpdateListenerCallback.allocate(callback, scope);
+		Newton.NewtonWorldListenerSetPostUpdateCallback(address, listener, callbackFunc);
 	}
 	
-	public void listenerSetDestructorCallback(Addressable listener, NewtonWorldDestroyListenerCallback callback, MemorySession session) {
-		MemorySegment callbackFunc = NewtonWorldDestroyListenerCallback.allocate(callback, session);
-		Newton_h.NewtonWorldListenerSetDestructorCallback(address, listener, callbackFunc);
+	public void listenerSetDestructorCallback(MemorySegment listener, NewtonWorldDestroyListenerCallback callback, SegmentScope scope) {
+		MemorySegment callbackFunc = NewtonWorldDestroyListenerCallback.allocate(callback, scope);
+		Newton.NewtonWorldListenerSetDestructorCallback(address, listener, callbackFunc);
 	}
 	
-	public void listenerSetBodyDestroyCallback(Addressable listener, NewtonWorldListenerBodyDestroyCallback callback, MemorySession session) {
-		MemorySegment callbackFunc = NewtonWorldListenerBodyDestroyCallback.allocate(callback, session);
-		Newton_h.NewtonWorldListenerSetBodyDestroyCallback(address, listener, callbackFunc);
+	public void listenerSetBodyDestroyCallback(MemorySegment listener, NewtonWorldListenerBodyDestroyCallback callback, SegmentScope scope) {
+		MemorySegment callbackFunc = NewtonWorldListenerBodyDestroyCallback.allocate(callback, scope);
+		Newton.NewtonWorldListenerSetBodyDestroyCallback(address, listener, callbackFunc);
 	}
 	
-	public void listenerDebug(Addressable context) {
-		Newton_h.NewtonWorldListenerDebug(address, context);
+	public void listenerDebug(MemorySegment context) {
+		Newton.NewtonWorldListenerDebug(address, context);
 	}
 	
-	public MemoryAddress getListenerUserData(Addressable listener) {
-		return Newton_h.NewtonWorldGetListenerUserData(address, listener);
+	public MemorySegment getListenerUserData(MemorySegment listener) {
+		return Newton.NewtonWorldGetListenerUserData(address, listener);
 	}
 	
-	public NewtonWorldListenerBodyDestroyCallback listenerGetBodyDestroyCallback(Addressable listener, MemorySession session) {
-		return NewtonWorldListenerBodyDestroyCallback.ofAddress(Newton_h.NewtonWorldListenerGetBodyDestroyCallback(address, listener), session);
+	public NewtonWorldListenerBodyDestroyCallback listenerGetBodyDestroyCallback(MemorySegment listener, SegmentScope scope) {
+		return NewtonWorldListenerBodyDestroyCallback.ofAddress(Newton.NewtonWorldListenerGetBodyDestroyCallback(address, listener), scope);
 	}
 	
-	public void setDestructorCallback(NewtonWorldDestructorCallback destructor, MemorySession session) {
-		MemorySegment destructorFunc = NewtonWorldDestructorCallback.allocate(destructor, session);
-		Newton_h.NewtonWorldSetDestructorCallback(address, destructorFunc);
+	public void setDestructorCallback(NewtonWorldDestructorCallback destructor, SegmentScope scope) {
+		MemorySegment destructorFunc = NewtonWorldDestructorCallback.allocate(destructor, scope);
+		Newton.NewtonWorldSetDestructorCallback(address, destructorFunc);
 	}
 	
-	public NewtonWorldDestructorCallback getDestructorCallback(MemorySession session) {
-		return NewtonWorldDestructorCallback.ofAddress(Newton_h.NewtonWorldGetDestructorCallback(address), session);
+	public NewtonWorldDestructorCallback getDestructorCallback(SegmentScope scope) {
+		return NewtonWorldDestructorCallback.ofAddress(Newton.NewtonWorldGetDestructorCallback(address), scope);
 	}
 	
-	public void setCollisionConstructorDestructorCallback(NewtonCollisionCopyConstructionCallback constructor, NewtonCollisionDestructorCallback destructor, MemorySession session) {
-		MemorySegment constructorFunc = NewtonCollisionCopyConstructionCallback.allocate(constructor, session);
-		MemorySegment destructorFunc = NewtonCollisionDestructorCallback.allocate(destructor, session);
-		Newton_h.NewtonWorldSetCollisionConstructorDestructorCallback(address, constructorFunc, destructorFunc);
+	public void setCollisionConstructorDestructorCallback(NewtonCollisionCopyConstructionCallback constructor, NewtonCollisionDestructorCallback destructor, SegmentScope scope) {
+		MemorySegment constructorFunc = NewtonCollisionCopyConstructionCallback.allocate(constructor, scope);
+		MemorySegment destructorFunc = NewtonCollisionDestructorCallback.allocate(destructor, scope);
+		Newton.NewtonWorldSetCollisionConstructorDestructorCallback(address, constructorFunc, destructorFunc);
 	}
 	
-	public void setCreateDestroyContactCallback(NewtonCreateContactCallback createContact, NewtonDestroyContactCallback destroyContact, MemorySession session) {
-		MemorySegment createFunc = NewtonCreateContactCallback.allocate(createContact, session);
-		MemorySegment destroyFunc = NewtonDestroyContactCallback.allocate(destroyContact, session);
-		Newton_h.NewtonWorldSetCreateDestroyContactCallback(address, createFunc, destroyFunc);
+	public void setCreateDestroyContactCallback(NewtonCreateContactCallback createContact, NewtonDestroyContactCallback destroyContact, SegmentScope scope) {
+		MemorySegment createFunc = NewtonCreateContactCallback.allocate(createContact, scope);
+		MemorySegment destroyFunc = NewtonDestroyContactCallback.allocate(destroyContact, scope);
+		Newton.NewtonWorldSetCreateDestroyContactCallback(address, createFunc, destroyFunc);
+	}
+
+	public void rayCast(MemorySegment p0, MemorySegment p1, NewtonWorldRayFilterCallback filter, MemorySegment userData, NewtonWorldRayPrefilterCallback prefilter, int threadIndex,
+						SegmentScope scope) {
+		MemorySegment filterFunc = NewtonWorldRayFilterCallback.allocate(filter, scope);
+		MemorySegment preFilterFunc = NewtonWorldRayPrefilterCallback.allocate(prefilter, scope);
+		Newton.NewtonWorldRayCast(address, p0, p1, filterFunc, userData, preFilterFunc, threadIndex);
 	}
 	
-	public void rayCast(float[] p0, float[] p1, NewtonWorldRayFilterCallback filter, Addressable userData, NewtonWorldRayPrefilterCallback prefilter, int threadIndex,
-						MemorySession session) {
-		MemorySegment p0Segment = session.allocateArray(Newton_h.C_FLOAT, p0);
-		MemorySegment p1Segment = session.allocateArray(Newton_h.C_FLOAT, p1);
-		MemorySegment filterFunc = NewtonWorldRayFilterCallback.allocate(filter, session);
-		MemorySegment preFilterFunc = NewtonWorldRayPrefilterCallback.allocate(prefilter, session);
-		Newton_h.NewtonWorldRayCast(address, p0Segment, p1Segment, filterFunc, userData, preFilterFunc, threadIndex);
+	public void rayCast(float[] p0, float[] p1, NewtonWorldRayFilterCallback filter, MemorySegment userData, NewtonWorldRayPrefilterCallback prefilter, int threadIndex,
+						SegmentScope scope) {
+		try (Arena arena = Arena.openConfined()) {
+			MemorySegment p0Segment = arena.allocateArray(Newton.C_FLOAT, p0);
+			MemorySegment p1Segment = arena.allocateArray(Newton.C_FLOAT, p1);
+			MemorySegment filterFunc = NewtonWorldRayFilterCallback.allocate(filter, scope);
+			MemorySegment preFilterFunc = NewtonWorldRayPrefilterCallback.allocate(prefilter, scope);
+			Newton.NewtonWorldRayCast(address, p0Segment, p1Segment, filterFunc, userData, preFilterFunc, threadIndex);
+		}
+	}
+
+	public int convexCast(MemorySegment matrix, MemorySegment target, NewtonCollision shape, MemorySegment param, MemorySegment userData, NewtonWorldRayPrefilterCallback prefilter,
+						  MemorySegment info, int maxContactsCount, int threadIndex, SegmentScope scope) {
+		MemorySegment prefilterFunc = NewtonWorldRayPrefilterCallback.allocate(prefilter, scope);
+		return Newton.NewtonWorldConvexCast(address, matrix, target, shape.address, param, userData, prefilterFunc, info, maxContactsCount, threadIndex);
 	}
 	
-	public int convexCast(float[] matrix, float[] target, NewtonCollision shape, MemorySegment param, Addressable userData, NewtonWorldRayPrefilterCallback prefilter,
-						  MemorySegment info, int maxContactsCount, int threadIndex, MemorySession session) {
-		MemorySegment matrixSegment = session.allocateArray(Newton_h.C_FLOAT, matrix);
-		MemorySegment targetSegment = session.allocateArray(Newton_h.C_FLOAT, target);
-		MemorySegment prefilterFunc = NewtonWorldRayPrefilterCallback.allocate(prefilter, session);
-		return Newton_h.NewtonWorldConvexCast(address, matrixSegment, targetSegment, shape.address, param, userData, prefilterFunc, info, maxContactsCount, threadIndex);
+	public int convexCast(float[] matrix, float[] target, NewtonCollision shape, MemorySegment param, MemorySegment userData, NewtonWorldRayPrefilterCallback prefilter,
+						  MemorySegment info, int maxContactsCount, int threadIndex, SegmentScope scope) {
+		try (Arena arena = Arena.openConfined()) {
+			MemorySegment matrixSegment = arena.allocateArray(Newton.C_FLOAT, matrix);
+			MemorySegment targetSegment = arena.allocateArray(Newton.C_FLOAT, target);
+			MemorySegment prefilterFunc = NewtonWorldRayPrefilterCallback.allocate(prefilter, scope);
+			return Newton.NewtonWorldConvexCast(address, matrixSegment, targetSegment, shape.address, param, userData, prefilterFunc, info, maxContactsCount, threadIndex);
+		}
 	}
 	
 	public int getBodyCount() {
-		return Newton_h.NewtonWorldGetBodyCount(address);
+		return Newton.NewtonWorldGetBodyCount(address);
 	}
 	
 	public int getConstraintCount() {
-		return Newton_h.NewtonWorldGetConstraintCount(address);
+		return Newton.NewtonWorldGetConstraintCount(address);
 	}
 	
 	public int createMaterialGroupID() {
-		return Newton_h.NewtonMaterialCreateGroupID(address);
+		return Newton.NewtonMaterialCreateGroupID(address);
 	}
 	
 	public int getDefaultMaterialGroupID() {
-		return Newton_h.NewtonMaterialGetDefaultGroupID(address);
+		return Newton.NewtonMaterialGetDefaultGroupID(address);
 	}
 	
 	public void destroyAllMaterialGroupIDs() {
-		Newton_h.NewtonMaterialDestroyAllGroupID(address);
+		Newton.NewtonMaterialDestroyAllGroupID(address);
 	}
 	
-	public MemoryAddress getMaterialUserData(int id0, int id1) {
-		return Newton_h.NewtonMaterialGetUserData(address, id0, id1);
+	public MemorySegment getMaterialUserData(int id0, int id1) {
+		return Newton.NewtonMaterialGetUserData(address, id0, id1);
 	}
 	
 	public void setMaterialSurfaceThickness(int id0, int id1, float thickness) {
-		Newton_h.NewtonMaterialSetSurfaceThickness(address, id0, id1, thickness);
+		Newton.NewtonMaterialSetSurfaceThickness(address, id0, id1, thickness);
 	}
 	
-	public void setMaterialCallbackUserData(int id0, int id1, Addressable userData) {
-		Newton_h.NewtonMaterialSetCallbackUserData(address, id0, id1, userData);
+	public void setMaterialCallbackUserData(int id0, int id1, MemorySegment userData) {
+		Newton.NewtonMaterialSetCallbackUserData(address, id0, id1, userData);
 	}
 	
-	public void setMaterialContactGenerationCallback(int id0, int id1, NewtonOnContactGeneration contactGeneration, MemorySession session) {
-		MemorySegment contactFunc = NewtonOnContactGeneration.allocate(contactGeneration, session);
-		Newton_h.NewtonMaterialSetContactGenerationCallback(address, id0, id1, contactFunc);
+	public void setMaterialContactGenerationCallback(int id0, int id1, NewtonOnContactGeneration contactGeneration, SegmentScope scope) {
+		MemorySegment contactFunc = NewtonOnContactGeneration.allocate(contactGeneration, scope);
+		Newton.NewtonMaterialSetContactGenerationCallback(address, id0, id1, contactFunc);
 	}
 	
-	public void setMaterialCompoundCollisionCallback(int id0, int id1, NewtonOnCompoundSubCollisionAABBOverlap compoundAabbOverlap, MemorySession session) {
-		MemorySegment overLapFunc = NewtonOnCompoundSubCollisionAABBOverlap.allocate(compoundAabbOverlap, session);
-		Newton_h.NewtonMaterialSetCompoundCollisionCallback(address, id0, id1, overLapFunc);
+	public void setMaterialCompoundCollisionCallback(int id0, int id1, NewtonOnCompoundSubCollisionAABBOverlap compoundAabbOverlap, SegmentScope scope) {
+		MemorySegment overLapFunc = NewtonOnCompoundSubCollisionAABBOverlap.allocate(compoundAabbOverlap, scope);
+		Newton.NewtonMaterialSetCompoundCollisionCallback(address, id0, id1, overLapFunc);
 	}
 	
-	public void setMaterialCollisionCallback(int id0, int id1, NewtonOnAABBOverlap aabbOverlap, NewtonContactsProcess process, MemorySession session) {
-		MemorySegment overlapFunc = NewtonOnAABBOverlap.allocate(aabbOverlap, session);
-		MemorySegment processFunc = NewtonContactsProcess.allocate(process, session);
-		Newton_h.NewtonMaterialSetCollisionCallback(address, id0, id1, overlapFunc, processFunc);
+	public void setMaterialCollisionCallback(int id0, int id1, NewtonOnAABBOverlap aabbOverlap, NewtonContactsProcess process, SegmentScope scope) {
+		MemorySegment overlapFunc = NewtonOnAABBOverlap.allocate(aabbOverlap, scope);
+		MemorySegment processFunc = NewtonContactsProcess.allocate(process, scope);
+		Newton.NewtonMaterialSetCollisionCallback(address, id0, id1, overlapFunc, processFunc);
 	}
 	
 	public void setMaterialDefaultSoftness(int id0, int id1, float softness) {
-		Newton_h.NewtonMaterialSetDefaultSoftness(address, id0, id1, softness);
+		Newton.NewtonMaterialSetDefaultSoftness(address, id0, id1, softness);
 	}
 	
 	public void setMaterialDefaultElasticity(int id0, int id1, float elasticCoef) {
-		Newton_h.NewtonMaterialSetDefaultElasticity(address, id0, id1, elasticCoef);
+		Newton.NewtonMaterialSetDefaultElasticity(address, id0, id1, elasticCoef);
 	}
 	
 	public void setMaterialDefaultCollidable(int id0, int id1, int state) {
-		Newton_h.NewtonMaterialSetDefaultCollidable(address, id0, id1, state);
+		Newton.NewtonMaterialSetDefaultCollidable(address, id0, id1, state);
 	}
 	
 	public void setMaterialDefaultFriction(int id0, int id1, float staticFriction, float kineticFriction) {
-		Newton_h.NewtonMaterialSetDefaultFriction(address, id0, id1, staticFriction, kineticFriction);
+		Newton.NewtonMaterialSetDefaultFriction(address, id0, id1, staticFriction, kineticFriction);
 	}
 	
 	public void resetMaterialJointIntraJointCollision(int id0, int id1) {
-		Newton_h.NewtonMaterialJointResetIntraJointCollision(address, id0, id1);
+		Newton.NewtonMaterialJointResetIntraJointCollision(address, id0, id1);
 	}
 	
 	public void resetMaterialJointSelftJointCollision(int id0, int id1) {
-		Newton_h.NewtonMaterialJointResetSelftJointCollision(address, id0, id1);
+		Newton.NewtonMaterialJointResetSelftJointCollision(address, id0, id1);
 	}
 	
 	public NewtonMaterial getFirstMaterial() {
-		return new NewtonMaterial(Newton_h.NewtonWorldGetFirstMaterial(address));
+		return new NewtonMaterial(Newton.NewtonWorldGetFirstMaterial(address));
 	}
 	
 	public NewtonMaterial getNextMaterial(NewtonMaterial material) {
-		MemoryAddress materialPtr = Newton_h.NewtonWorldGetNextMaterial(address, material.address);
-		return materialPtr.equals(MemoryAddress.NULL) ? null : new NewtonMaterial(materialPtr);
+		MemorySegment materialPtr = Newton.NewtonWorldGetNextMaterial(address, material.address);
+		return materialPtr.equals(MemorySegment.NULL) ? null : new NewtonMaterial(materialPtr);
 	}
 	
 	public NewtonBody getFirstBody() {
-		return NewtonBody.wrap(Newton_h.NewtonWorldGetFirstBody(address));
+		return NewtonBody.wrap(Newton.NewtonWorldGetFirstBody(address));
 	}
 	
 	public NewtonBody getNextBody(NewtonBody body) {
-		MemoryAddress bodyPtr = Newton_h.NewtonWorldGetNextBody(address, body.address);
-		return bodyPtr.equals(MemoryAddress.NULL) ? null : NewtonBody.wrap(bodyPtr);
+		MemorySegment bodyPtr = Newton.NewtonWorldGetNextBody(address, body.address);
+		return bodyPtr.equals(MemorySegment.NULL) ? null : NewtonBody.wrap(bodyPtr);
 	}
 	
-	public NewtonCollision createCollisionFromSerialization(NewtonDeserializeCallback deserializeFunction, Addressable serializeHandle, MemorySession session) {
-		MemorySegment deserializeFunc = NewtonDeserializeCallback.allocate(deserializeFunction, session);
-		return NewtonCollision.wrap(Newton_h.NewtonCreateCollisionFromSerialization(address, deserializeFunc, serializeHandle));
+	public NewtonCollision createCollisionFromSerialization(NewtonDeserializeCallback deserializeFunction, MemorySegment serializeHandle, SegmentScope scope) {
+		MemorySegment deserializeFunc = NewtonDeserializeCallback.allocate(deserializeFunction, scope);
+		return NewtonCollision.wrap(Newton.NewtonCreateCollisionFromSerialization(address, deserializeFunc, serializeHandle));
 	}
 	
-	public void serializeCollision(NewtonCollision collision, NewtonSerializeCallback serializeFunction, Addressable serializeHandle, MemorySession session) {
-		MemorySegment serializeFunc = NewtonSerializeCallback.allocate(serializeFunction, session);
-		Newton_h.NewtonCollisionSerialize(address, collision.address, serializeFunc, serializeHandle);
+	public void serializeCollision(NewtonCollision collision, NewtonSerializeCallback serializeFunction, MemorySegment serializeHandle, SegmentScope scope) {
+		MemorySegment serializeFunc = NewtonSerializeCallback.allocate(serializeFunction, scope);
+		Newton.NewtonCollisionSerialize(address, collision.address, serializeFunc, serializeHandle);
 	}
 	
 	public void destroyAllBodies() {
-		Newton_h.NewtonDestroyAllBodies(address);
+		Newton.NewtonDestroyAllBodies(address);
 	}
 	/**
 	 * This method wraps a memory address into a NewtonWorld object.
 	 * This method is only meant to be used internally. Improper use of this method could
 	 * result in errors or an exception.
-	 * @param address - MemoryAddress of NewtonWorld
+	 * @param address - MemorySegment of NewtonWorld
 	 * @return NewtonWorld object
 	 */
-	protected static NewtonWorld wrap(MemoryAddress address) {
+	protected static NewtonWorld wrap(MemorySegment address) {
 		return new NewtonWorld(address);
 	}
 	
