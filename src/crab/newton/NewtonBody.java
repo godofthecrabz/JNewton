@@ -18,7 +18,16 @@ public final class NewtonBody {
 	 *
 	 */
 	public final int bodyType;
-	
+
+	/**
+	 * public constructor of the {@code NewtonBody} class.
+	 * This constructor is meant to be used in
+	 * callback methods such as in {@code NewtonApplyForceAndTorque} when the NewtonBody is a raw address.
+	 * Creation of NewtonBodies should only happen with the {@code NewtonWorld} body create methods.
+	 * Supplying an address that isn't an already existing NewtonBody instance may result in a crash or
+	 * undefined behavior.
+	 * @param address address of the NewtonBody
+	 */
 	public NewtonBody(MemorySegment address) {
 		this(address, Newton.NewtonBodyGetType(address));
 	}
@@ -73,9 +82,9 @@ public final class NewtonBody {
 	}
 
 	/**
-	 * Adds the force vector to the NewtonBody.
+	 * Adds the net force applied to the NewtonBody.
 	 * The MemorySegment holding the force vector is expected to have an equivalent layout
-	 * to the {@code VEC3F} MemoryLayout.
+	 * to the {@code Newton.VEC3F} MemoryLayout.
 	 * This method is only effective when called from {@code NewtonApplyForceAndTorque} callback.
 	 * @param force {@code MemorySegment} containing the force vector
 	 */
@@ -84,7 +93,7 @@ public final class NewtonBody {
 	}
 
 	/**
-	 * Adds the force vector to the NewtonBody.
+	 * Adds the net force applied to the NewtonBody.
 	 * The float array must have a length greater than or equal to 3.
 	 * This method is only effective when called from {@code NewtonApplyForceAndTorque} callback.
 	 * @param force {@code float[]} containing the force vector
@@ -97,21 +106,21 @@ public final class NewtonBody {
 	}
 
 	/**
-	 * Adds the torque vector to the NewtonBody.
+	 * Adds the net torque applied to the NewtonBody.
 	 * The MemorySegment holding the torque vector is expected to have an equivalent layout
-	 * to the {@code VEC3F} MemoryLayout.
+	 * to the {@code Newton.VEC3F} MemoryLayout.
 	 * This method is only effective when called from {@code NewtonApplyForceAndTorque} callback.
-	 * @param torque
+	 * @param torque {@code MemorySegment} containing the torque vector
 	 */
 	public void addTorque(MemorySegment torque) {
 		Newton.NewtonBodyAddTorque(address, torque);
 	}
 
 	/**
-	 * Adds the torque vector to the NewtonBody.
+	 * Adds the net torque applied to the NewtonBody.
 	 * The float array must have a length greater than or equal to 3.
 	 * This method is only effective when called from {@code NewtonApplyForceAndTorque} callback.
-	 * @param torque
+	 * @param torque {@code float[]} containing the torque vector
 	 */
 	public void addTorque(float[] torque) {
 		try (Arena arena = Arena.openConfined()) {
@@ -120,10 +129,21 @@ public final class NewtonBody {
 		}
 	}
 
+	/**
+	 * Sets the relative position of the center of mass.
+	 * The MemorySegment holding the center of mass is expected to have an equivalent layout
+	 * to the {@code Newton.VEC3F} MemoryLayout.
+	 * @param center {@code MemorySegment} containing the center of mass
+	 */
 	public void setCenterOfMass(MemorySegment center) {
 		Newton.NewtonBodySetCentreOfMass(address, center);
 	}
 
+	/**
+	 * Sets the relative position of the center of mass.
+	 * The float array must have a length greater than or equal to 3.
+	 * @param center {@code float[]} containing the center of mass
+	 */
 	public void setCenterOfMass(float[] center) {
 		try (Arena arena = Arena.openConfined()) {
 			MemorySegment centerSeg = arena.allocateArray(Newton.C_FLOAT, center);
@@ -131,14 +151,34 @@ public final class NewtonBody {
 		}
 	}
 
+	/**
+	 * Sets the mass matrix of the NewtonBody
+	 * @param mass the mass of the NewtonBody
+	 * @param Ixx moment of inertia of the first principal axis
+	 * @param Iyy moment of inertia of the second principal axis
+	 * @param Izz moment of inertia of the third principal axis
+	 */
 	public void setMassMatrix(float mass, float Ixx, float Iyy, float Izz) {
 		Newton.NewtonBodySetMassMatrix(address, mass, Ixx, Iyy, Izz);
 	}
 
+	/**
+	 * Sets the mass matrix of the NewtonBody. The MemorySegment containing the matrix should have an
+	 * equivalent layout to the {@code Newton.MAT4F} MemoryLayout. The matrix should be in column-major order.
+	 * @param mass the mass of the NewtonBody
+	 * @param inertiaMatrix {@code MemorySegment} containing the inertia matrix
+	 */
 	public void setFullMassMatrix(float mass, MemorySegment inertiaMatrix) {
 		Newton.NewtonBodySetFullMassMatrix(address, mass, inertiaMatrix);
 	}
 
+	/**
+	 * Sets the mass matrix of the NewtonBody.
+	 * The float array must have a length greater than or equal to 16.
+	 * The matrix should be in column-major order.
+	 * @param mass the mass of the NewtonBody
+	 * @param inertiaMatrix {@code float[]} containing the inertia matrix
+	 */
 	public void setFullMassMatrix(float mass, float[] inertiaMatrix) {
 		try (Arena arena = Arena.openConfined()) {
 			MemorySegment matrix = arena.allocateArray(Newton.C_FLOAT, inertiaMatrix);
@@ -146,14 +186,32 @@ public final class NewtonBody {
 		}
 	}
 
+	/**
+	 * Sets the mass property of the NewtonBody based of the NewtonCollision and mass.
+	 * @param mass the mass of the NewtonBody
+	 * @param collision {@code NewtonCollision}
+	 */
 	public void setMassProperties(float mass, NewtonCollision collision) {
 		Newton.NewtonBodySetMassProperties(address, mass, collision.address);
 	}
 
+	/**
+	 * Sets the transformation matrix of the NewtonBody.
+	 * The MemorySegment containing the matrix should have an
+	 * equivalent layout to the {@code Newton.MAT4F} MemoryLayout.
+	 * The matrix should be in column-major order.
+	 * @param matrix {@code MemorySegment} containing the transformation matrix
+	 */
 	public void setMatrix(MemorySegment matrix) {
 		Newton.NewtonBodySetMatrix(address, matrix);
 	}
 
+	/**
+	 * Sets the transformation matrix of the NewtonBody.
+	 * The float array must have a length greater than or equal to 16.
+	 * The matrix should be in column-major order.
+	 * @param matrix {@code float[]} containing the transformation matrix
+	 */
 	public void setMatrix(float[] matrix) {
 		try (Arena arena = Arena.openConfined()) {
 			MemorySegment matrixSeg = arena.allocateArray(Newton.C_FLOAT, matrix);
@@ -161,10 +219,23 @@ public final class NewtonBody {
 		}
 	}
 
+	/**
+	 * Sets the transformation matrix of the NewtonBody.
+	 * The MemorySegment containing the matrix should have an
+	 * equivalent layout to the {@code Newton.MAT4F} MemoryLayout.
+	 * The matrix should be in column-major order.
+	 * @param matrix {@code MemorySegment} containing the transformation matrix
+	 */
 	public void setMatrixNoSleep(MemorySegment matrix) {
 		Newton.NewtonBodySetMatrixNoSleep(address, matrix);
 	}
 
+	/**
+	 * Sets the transformation matrix of the NewtonBody.
+	 * The float array must have a length greater than or equal to 16.
+	 * The matrix should be in column-major order.
+	 * @param matrix {@code float[]} containing the transformation matrix
+	 */
 	public void setMatrixNoSleep(float[] matrix) {
 		try (Arena arena = Arena.openConfined()) {
 			MemorySegment matrixSeg = arena.allocateArray(Newton.C_FLOAT, matrix);
@@ -172,10 +243,23 @@ public final class NewtonBody {
 		}
 	}
 
+	/**
+	 * Applies hierarchical transformation to the NewtonBody.
+	 * The MemorySegment containing the matrix should have an
+	 * equivalent layout to the {@code Newton.MAT4F} MemoryLayout.
+	 * The matrix should be in column-major order.
+	 * @param matrix {@code MemorySegment} containing the transformation matrix
+	 */
 	public void setMatrixRecursive(MemorySegment matrix) {
 		Newton.NewtonBodySetMatrixRecursive(address, matrix);
 	}
 
+	/**
+	 * Applies hierarchical transformation to the NewtonBody.
+	 * The float array must have a length greater than or equal to 16.
+	 * The matrix should be in column-major order.
+	 * @param matrix {@code float[]} containing the transformation matrix
+	 */
 	public void setMatrixRecursive(float[] matrix) {
 		try (Arena arena = Arena.openConfined()) {
 			MemorySegment matrixSeg = arena.allocateArray(Newton.C_FLOAT, matrix);
@@ -183,22 +267,50 @@ public final class NewtonBody {
 		}
 	}
 
+	/**
+	 * Assigns a material group id to the NewtonBody
+	 * @param id material group id
+	 */
 	public void setMaterialGroupdID(int id) {
 		Newton.NewtonBodySetMaterialGroupID(address, id);
 	}
 
+	/**
+	 * Sets the continuous collision mode for the NewtonBody. The continuous collision mode for
+	 * the NewtonBody is set to off by default.
+	 * If continuous collision is activated the physics engine will perform predictive calculations
+	 * to prevent high speed bodies from clipping. This is recommended to be activated for small, high speed bodies.
+	 * @param state 1 for active | 0 for disabled
+	 */
 	public void setContinuousCollisionMode(int state) {
 		Newton.NewtonBodySetContinuousCollisionMode(address, state);
 	}
 
+	/**
+	 * Sets the collision state flag of this NewtonBody when the body is connected to another body
+	 * by a hierarchy of joints.
+	 * @param state 1 this body will collide with any linked body | 0 disable collisions with body connected to
+	 *              this one by joints
+	 */
 	public void setJointRecursiveCollision(int state) {
 		Newton.NewtonBodySetJointRecursiveCollision(address, state);
 	}
 
+	/**
+	 * Sets the angular velocity of the NewtonBody.
+	 * The MemorySegment holding the angular velocity is expected to have an equivalent layout
+	 * to the {@code Newton.VEC3F} MemoryLayout.
+	 * @param omega {@code MemorySegment} containing the angular velocity
+	 */
 	public void setOmega(MemorySegment omega) {
 		Newton.NewtonBodySetOmega(address, omega);
 	}
 
+	/**
+	 * Sets the angular velocity of the NewtonBody.
+	 * The float array must have a length greater than or equal to 3.
+	 * @param omega {@code float[]} containing the angular velocity
+	 */
 	public void setOmega(float[] omega) {
 		try (Arena arena = Arena.openConfined()) {
 			MemorySegment omegaSeg = arena.allocateArray(Newton.C_FLOAT, omega);
@@ -206,10 +318,21 @@ public final class NewtonBody {
 		}
 	}
 
+	/**
+	 * Sets the angular velocity of the NewtonBody.
+	 * The MemorySegment holding the angular velocity is expected to have an equivalent layout
+	 * to the {@code Newton.VEC3F} MemoryLayout.
+	 * @param omega {@code MemorySegment} containing the angular velocity
+	 */
 	public void setOmegaNoSleep(MemorySegment omega) {
 		Newton.NewtonBodySetOmegaNoSleep(address, omega);
 	}
 
+	/**
+	 * Sets the angular velocity of the NewtonBody.
+	 * The float array must have a length greater than or equal to 3.
+	 * @param omega {@code float[]} containing the angular velocity
+	 */
 	public void setOmegaNoSleep(float[] omega) {
 		try (Arena arena = Arena.openConfined()) {
 			MemorySegment omegaSeg = arena.allocateArray(Newton.C_FLOAT, omega);
@@ -217,10 +340,21 @@ public final class NewtonBody {
 		}
 	}
 
+	/**
+	 * Sets the global linear velocity of the NewtonBody.
+	 * The MemorySegment holding the linear velocity is expected to have an equivalent layout
+	 * to the {@code Newton.VEC3F} MemoryLayout.
+	 * @param velocity {@code MemorySegment} containing the linear velocity
+	 */
 	public void setVelocity(MemorySegment velocity) {
 		Newton.NewtonBodySetVelocity(address, velocity);
 	}
 
+	/**
+	 * Sets the global linear velocity of the NewtonBody.
+	 * The float array must have a length greater than or equal to 3.
+	 * @param velocity {@code float[]} containing the linear velocity
+	 */
 	public void setVelocity(float[] velocity) {
 		try (Arena arena = Arena.openConfined()) {
 			MemorySegment velSeg = arena.allocateArray(Newton.C_FLOAT, velocity);
@@ -228,10 +362,21 @@ public final class NewtonBody {
 		}
 	}
 
+	/**
+	 * Sets the global linear velocity of the NewtonBody.
+	 * The MemorySegment holding the linear velocity is expected to have an equivalent layout
+	 * to the {@code Newton.VEC3F} MemoryLayout.
+	 * @param velocity {@code MemorySegment} containing the linear velocity
+	 */
 	public void setVelocityNoSleep(MemorySegment velocity) {
 		Newton.NewtonBodySetVelocityNoSleep(address, velocity);
 	}
 
+	/**
+	 * Sets the global linear velocity of the NewtonBody.
+	 * The float array must have a length greater than or equal to 3.
+	 * @param velocity {@code float[]} containing the linear velocity
+	 */
 	public void setVelocityNoSleep(float[] velocity) {
 		try (Arena arena = Arena.openConfined()) {
 			MemorySegment velSeg = arena.allocateArray(Newton.C_FLOAT, velocity);
@@ -239,10 +384,23 @@ public final class NewtonBody {
 		}
 	}
 
+	/**
+	 * Sets the net force applied to the NewtonBody.
+	 * The MemorySegment holding the force is expected to have an equivalent layout
+	 * to the {@code Newton.VEC3F} MemoryLayout.
+	 * This method is only effective when called from {@code NewtonApplyForceAndTorque} callback.
+	 * @param force {@code MemorySegment} containing the net force
+	 */
 	public void setForce(MemorySegment force) {
 		Newton.NewtonBodySetForce(address, force);
 	}
 
+	/**
+	 * Sets the net force applied to the NewtonBody.
+	 * The float array must have a length greater than or equal to 3.
+	 * This method is only effective when called from {@code NewtonApplyForceAndTorque} callback.
+	 * @param force {@code float[]} containing the net force
+	 */
 	public void setForce(float[] force) {
 		try (Arena arena = Arena.openConfined()) {
 			MemorySegment forceSeg = arena.allocateArray(Newton.C_FLOAT, force);
@@ -250,10 +408,23 @@ public final class NewtonBody {
 		}
 	}
 
+	/**
+	 * Sets the net torque applied to the NewtonBody.
+	 * The MemorySegment holding the torque is expected to have an equivalent layout
+	 * to the {@code Newton.VEC3F} MemoryLayout.
+	 * This method is only effective when called from {@code NewtonApplyForceAndTorque} callback.
+	 * @param torque {@code MemorySegment} containing the net torque
+	 */
 	public void setTorque(MemorySegment torque) {
 		Newton.NewtonBodySetTorque(address, torque);
 	}
 
+	/**
+	 * Sets the net torque applied to the NewtonBody.
+	 * The float array must have a length greater than or equal to 3.
+	 * This method is only effective when called from {@code NewtonApplyForceAndTorque} callback.
+	 * @param torque {@code float[]} containing the net torque
+	 */
 	public void setTorque(float[] torque) {
 		try (Arena arena = Arena.openConfined()) {
 			MemorySegment torqueSeg = arena.allocateArray(Newton.C_FLOAT, torque);
@@ -261,14 +432,29 @@ public final class NewtonBody {
 		}
 	}
 
+	/**
+	 * Applies the linear viscous dampening coefficient to the NewtonBody.
+	 * @param linearDamp the linear damping coefficient. The value is clamped between 0.0 and 1.0.
+	 *                   The default value is 0.1
+	 */
 	public void setLinearDamping(float linearDamp) {
 		Newton.NewtonBodySetLinearDamping(address, linearDamp);
 	}
 
+	/**
+	 * Applies the angular viscous dampening coefficient to the NewtonBody.
+	 * @param angularDamping {@code MemorySegment} containing the angular damping coefficients of the
+	 *                                            principal axis of the NewtonBody
+	 */
 	public void setAngularDamping(MemorySegment angularDamping) {
 		Newton.NewtonBodySetAngularDamping(address, angularDamping);
 	}
 
+	/**
+	 * Applies the angular viscous dampening coefficient to the NewtonBody.
+	 * @param angularDamp {@code float[]} containing the damping coefficients of the
+	 *                                    principal axis of the NewtonBody
+	 */
 	public void setAngularDamping(float[] angularDamp) {
 		try (Arena arena = Arena.openConfined()) {
 			MemorySegment dampSeg = arena.allocateArray(Newton.C_FLOAT, angularDamp);
@@ -276,18 +462,36 @@ public final class NewtonBody {
 		}
 	}
 
+	/**
+	 * Assigns the collision primitive of the NewtonBody.
+	 * @param collision {@NewtonCollision} to used by the body
+	 */
 	public void setCollision(NewtonCollision collision) {
 		Newton.NewtonBodySetCollision(address, collision.address);
 	}
 
+	/**
+	 * Sets the collision scale of the collision used by the NewtonBody.
+	 * @param scaleX scale for the x-axis
+	 * @param scaleY scale for the y-axis
+	 * @param scaleZ scale for the z-axis
+	 */
 	public void setCollisionScale(float scaleX, float scaleY, float scaleZ) {
 		Newton.NewtonBodySetCollisionScale(address, scaleX, scaleY, scaleZ);
 	}
 
+	/**
+	 * Gets the sleep state of the NewtonBody.
+	 * @return 0 for active | 1 for sleeping
+	 */
 	public int getSleepState() {
 		return Newton.NewtonBodyGetSleepState(address);
 	}
 
+	/**
+	 * Sets the sleep state of the NewtonBody.
+	 * @param state 0 for active | 1 for sleeping
+	 */
 	public void setSleepState(int state) {
 		Newton.NewtonBodySetSleepState(address, state);
 	}

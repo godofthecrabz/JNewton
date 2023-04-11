@@ -10,6 +10,10 @@ import java.nio.file.Path;
 
 import crab.newton.internal.*;
 import static java.lang.foreign.ValueLayout.*;
+
+/**
+ * The class that contains all the functions in the Newton Dynamics Physics Library.
+ */
 public class Newton  {
 
     public static final OfByte C_CHAR = Constants$root.C_CHAR$LAYOUT;
