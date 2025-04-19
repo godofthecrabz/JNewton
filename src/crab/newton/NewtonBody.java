@@ -7,17 +7,11 @@ import crab.newton.callbacks.NewtonSetTransform;
 import crab.newton.internal.*;
 import java.lang.foreign.*;
 
-public final class NewtonBody {
+public record NewtonBody(MemorySegment address, int bodyType) {
 
 	public static final int DYNAMIC_BODY = Newton.NEWTON_DYNAMIC_BODY(),
 			KINEMATIC_BODY = Newton.NEWTON_KINEMATIC_BODY(),
 			DYNAMIC_ASYMETRIC_BODY = Newton.NEWTON_DYNAMIC_ASYMETRIC_BODY();
-	protected final MemorySegment address;
-	/**
-	 * int representing type of the NewtonBody
-	 *
-	 */
-	public final int bodyType;
 
 	/**
 	 * public constructor of the {@code NewtonBody} class.
@@ -32,10 +26,7 @@ public final class NewtonBody {
 		this(address, Newton.NewtonBodyGetType(address));
 	}
 
-	protected NewtonBody(MemorySegment address, int bodyType) {
-		this.address = address;
-		this.bodyType = bodyType;
-	}
+	public NewtonBody {}
 
 	/**
 	 * Test if object is equal to this NewtonBody.
@@ -192,7 +183,7 @@ public final class NewtonBody {
 	 * @param collision {@code NewtonCollision}
 	 */
 	public void setMassProperties(float mass, NewtonCollision collision) {
-		Newton.NewtonBodySetMassProperties(address, mass, collision.address);
+		Newton.NewtonBodySetMassProperties(address, mass, collision.address());
 	}
 
 	/**
@@ -467,7 +458,7 @@ public final class NewtonBody {
 	 * @param collision {@NewtonCollision} to used by the body
 	 */
 	public void setCollision(NewtonCollision collision) {
-		Newton.NewtonBodySetCollision(address, collision.address);
+		Newton.NewtonBodySetCollision(address, collision.address());
 	}
 
 	/**
@@ -496,124 +487,312 @@ public final class NewtonBody {
 		Newton.NewtonBodySetSleepState(address, state);
 	}
 
+	/**
+	 * Gets the auto-activation state of the NewtonBody.
+	 * Auto-activation is enabled by default.
+	 * @return 1 for auto-activation on | 0 for auto-activation off
+	 */
 	public int getAutoSleepState() {
 		return Newton.NewtonBodyGetAutoSleep(address);
 	}
 
+	/**
+	 * Sets the auto-activation state of the NewtonBody.
+	 * Auto-activation is enabled by default.
+	 * @param state 1 for auto-activation on | 0 for auto-activation off
+	 */
 	public void setAutoSleepState(int state) {
 		Newton.NewtonBodySetAutoSleep(address, state);
 	}
 
+	/**
+	 * Gets the freeze state of the NewtonBody.
+	 * The freeze attribute determines whether the NewtonBody is actively simulated.
+	 * @return 1 for frozen | 0 for unfrozen
+	 */
 	public int getFreezeState() {
 		return Newton.NewtonBodyGetFreezeState(address);
 	}
 
+	/**
+	 * Sets the freeze state of the NewtonBody.
+	 * The freeze attribute determines whether the NewtonBody is actively simulated.
+	 * @param state 1 for frozen | 0 for unfrozen
+	 */
 	public void setFreezeState(int state) {
 		Newton.NewtonBodySetFreezeState(address, state);
 	}
 
+	/**
+	 * Gets the gyroscopic torque of the NewtonBody.
+	 * @return gyroscopic torque
+	 */
 	public int getGyroscopicTorque() {
 		return Newton.NewtonBodyGetGyroscopicTorque(address);
 	}
 
+	/**
+	 * Sets the gyroscopic torque of the NewtonBody.
+	 * @param state gyroscopic torque
+	 */
 	public void setGyroscopicTorque(int state) {
 		Newton.NewtonBodySetGyroscopicTorque(address, state);
 	}
-	
+
+	/**
+	 * Assign a method to be called when the NewtonBody is destroyed.
+	 * @param callback {@code MemorySegment} that points to the callback method
+	 */
 	public void setDestructorCallback(MemorySegment callback) {
 		Newton.NewtonBodySetDestructorCallback(address, callback);
 	}
 
+	/**
+	 * Assign a method to be called when the NewtonBody is destroyed.
+	 * @param callback {@code NewtonBodyDestructor} method to be assigned to the body
+	 * @param scope {@code SegmentScope} for allocating the {@code MemorySegment} pointing to the callback
+	 */
 	public void setDestructorCallback(NewtonBodyDestructor callback, SegmentScope scope) {
 		MemorySegment callbackFunc = NewtonBodyDestructor.allocate(callback, scope);
 		Newton.NewtonBodySetDestructorCallback(address, callbackFunc);
 	}
-	
-	public MemorySegment getDestructorCallback() {
+
+	/**
+	 * Gets the destructor callback assigned to the NewtonBody as a raw pointer.
+	 * @return {@code MemorySegment} that points to the callback
+	 */
+	public MemorySegment getRawDestructorCallback() {
 		return Newton.NewtonBodyGetDestructorCallback(address);
 	}
 
+	/**
+	 * Gets the destructor callback assigned to the NewtonBody.
+	 * This method wraps the function pointer in a {@code NewtonBodyDestructor}
+	 * with the global scope.
+	 * @return {@code NewtonBodyDestructor} callback assigned to the body
+	 */
+	public NewtonBodyDestructor getDestructorCallback() {
+		MemorySegment funcAddress = Newton.NewtonBodyGetDestructorCallback(address);
+		return NewtonBodyDestructor.ofAddress(funcAddress, SegmentScope.global());
+	}
+
+	/**
+	 * Gets the destructor callback assigned to the NewtonBody.
+	 * This method wraps the function pointer in a {@code NewtonBodyDestructor}
+	 * with the same lifetime as the provided scope.
+	 * @param scope {@code SegmentScope} that controls the lifetime of the callback
+	 * @return {@code NewtonBodyDestructor} callback assigned to the body
+	 */
 	public NewtonBodyDestructor getDestructorCallback(SegmentScope scope) {
 		MemorySegment funcAddress = Newton.NewtonBodyGetDestructorCallback(address);
 		return NewtonBodyDestructor.ofAddress(funcAddress, scope);
 	}
-	
+
+	/**
+	 * Assign a method to be called to update the visual representation of the NewtonBody.
+	 * @param callback {@code MemorySegment} that points to the callback method
+	 */
 	public void setTransformCallback(MemorySegment callback) {
 		Newton.NewtonBodySetTransformCallback(address, callback);
 	}
 
+	/**
+	 * Assign a method to be called to update the visual representation of the NewtonBody.
+	 * @param callback {@code NewtonSetTransform} method to be assigned to the NewtonBody
+	 * @param scope {@code SegmentScope} that controls the lifetime of the callback
+	 */
 	public void setTransformCallback(NewtonSetTransform callback, SegmentScope scope) {
 		MemorySegment callbackFunc = NewtonSetTransform.allocate(callback, scope);
 		Newton.NewtonBodySetTransformCallback(address, callbackFunc);
 	}
-	
-	public MemorySegment getTransformCallback() {
+
+	/**
+	 * Gets the transformation callback assigned to the NewtonBody as a raw pointer.
+	 * @return {@code MemorySegment} that points to the callback
+	 */
+	public MemorySegment getRawTransformCallback() {
 		return Newton.NewtonBodyGetTransformCallback(address);
 	}
 
+	/**
+	 * Gets the transformation callback assigned to the NewtonBody.
+	 * This method wraps the function pointer in a {@code NewtonSetTransform}
+	 * with the global scope.
+	 * @return {@code NewtonSetTransform} callback assigned to the body
+	 */
+	public NewtonSetTransform getTransformCallback() {
+		MemorySegment funcAddress = Newton.NewtonBodyGetTransformCallback(address);
+		return NewtonSetTransform.ofAddress(funcAddress, SegmentScope.global());
+	}
+
+	/**
+	 * Gets the transformation callback assigned to the NewtonBody.
+	 * This method wraps the function pointer in a {@code NewtonSetTransform}
+	 * with the same lifetime as the provided scope.
+	 * @param scope {@code SegmentScope} that controls the lifetime of the callback
+	 * @return {@code NewtonSetTransform} callback assigned to the body
+	 */
 	public NewtonSetTransform getTransformCallback(SegmentScope scope) {
 		MemorySegment funcAddress = Newton.NewtonBodyGetTransformCallback(address);
 		return NewtonSetTransform.ofAddress(funcAddress, scope);
 	}
-	
+
+	/**
+	 * Assign a method for applying an external force and torque to the body.
+	 * @param callback {@code MemorySegment} that points to the callback method
+	 */
 	public void setForceAndTorqueCallback(MemorySegment callback) {
 		Newton.NewtonBodySetForceAndTorqueCallback(address, callback);
 	}
 
+	/**
+	 * Assign a method for applying an external force and torque to the body.
+	 * @param callback {@code NewtonApplyForceAndTorque} method to be assigned to the NewtonBody
+	 * @param scope {@code SegmentScope} that controls the lifetime of the callback
+	 */
 	public void setForceAndTorqueCallback(NewtonApplyForceAndTorque callback, SegmentScope scope) {
 		MemorySegment callbackFunc = NewtonApplyForceAndTorque.allocate(callback, scope);
 		Newton.NewtonBodySetForceAndTorqueCallback(address, callbackFunc);
 	}
 
-	public MemorySegment getForceAndTorqueCallback() {
+	/**
+	 * Gets the force and torque callback assigned to the NewtonBody as a raw pointer.
+	 * @return {@code MemorySegment} that points to the callback
+	 */
+	public MemorySegment getRawForceAndTorqueCallback() {
 		return Newton.NewtonBodyGetForceAndTorqueCallback(address);
 	}
 
+	/**
+	 * Gets the force and torque callback assigned to the NewtonBody.
+	 * This method wraps the function pointer in a {@code NewtonSetTransform}
+	 * with the global scope.
+	 * @return {@code NewtonApplyForceAndTorque} callback assigned to the body
+	 */
+	public NewtonApplyForceAndTorque getForceAndTorqueCallback() {
+		MemorySegment funcAddress = Newton.NewtonBodyGetForceAndTorqueCallback(address);
+		return NewtonApplyForceAndTorque.ofAddress(funcAddress, SegmentScope.global());
+	}
+
+	/**
+	 * Gets the transformation callback assigned to the NewtonBody.
+	 * This method wraps the function pointer in a {@code NewtonApplyForceAndTorque}
+	 * with the same lifetime as the provided scope.
+	 * @param scope {@code SegmentScope} that controls the lifetime of the callback
+	 * @return {@code NewtonApplyForceAndTorque} callback assigned to the body
+	 */
 	public NewtonApplyForceAndTorque getForceAndTorqueCallback(SegmentScope scope) {
 		MemorySegment funcAddress = Newton.NewtonBodyGetForceAndTorqueCallback(address);
 		return NewtonApplyForceAndTorque.ofAddress(funcAddress, scope);
 	}
 
+	/**
+	 * Gets the ID of the NewtonBody.
+	 * @return bodyID
+	 */
 	public int getID() {
 		return Newton.NewtonBodyGetID(address);
 	}
 
+	/**
+	 * Set a user defined value to the NewtonBody.
+	 * @param data user data to assign to the body
+	 */
 	public void setUserData(MemorySegment data) {
 		Newton.NewtonBodySetUserData(address, data);
 	}
 
+	/**
+	 * Get the user defined value stored with the NewtonBody.
+	 * @return {@code MemorySegment} containing the user defined value
+	 */
 	public MemorySegment getUserData() {
 		return Newton.NewtonBodyGetUserData(address);
 	}
 
+	/**
+	 * Returns a raw pointer to the NewtonWorld object that owns this NewtonBody.
+	 * @return {@code MemorySegment} pointing to the NewtonWorld
+	 */
+	public MemorySegment getRawWorld() {
+		return Newton.NewtonBodyGetWorld(address);
+	}
+
+	/**
+	 * Returns the {@code NewtonWorld} that owns this NewtonBody.
+	 * @return {@code NewtonWorld} that owns this body
+	 */
 	public NewtonWorld getWorld() {
-		return NewtonWorld.wrap(Newton.NewtonBodyGetWorld(address));
+		return new NewtonWorld(Newton.NewtonBodyGetWorld(address));
 	}
 
+
+	/**
+	 * Returns a raw pointer to the collision primitive of this NewtonBody.
+	 * @return {@code MemorySegment} that points to the collision primitive
+	 */
+	public MemorySegment getRawCollision() {
+		return Newton.NewtonBodyGetCollision(address);
+	}
+
+	/**
+	 * Gets the collision primitive of the NewtonBody.
+	 * @return {@code NewtonCollision} of the body
+	 */
 	public NewtonCollision getCollision() {
-		return NewtonCollision.wrap(Newton.NewtonBodyGetCollision(address));
+		return new NewtonCollision(Newton.NewtonBodyGetCollision(address));
 	}
 
+	/**
+	 * Gets the material group ID of the NewtonBody.
+	 * @return material group ID
+	 */
 	public int getMaterialGroupID() {
 		return Newton.NewtonBodyGetMaterialGroupID(address);
 	}
 
+	/**
+	 * Gets the serialized ID of the NewtonBody.
+	 * @return serialized ID
+	 */
 	public int getSerializedID() {
 		return Newton.NewtonBodyGetSerializedID(address);
 	}
 
+	/**
+	 * Gets the continuous state mode for the NewtonBody.
+	 * This is disabled by default.
+	 * @return 1 for active | 0 for disabled
+	 */
 	public int getContinuousCollisionMode() {
 		return Newton.NewtonBodyGetContinuousCollisionMode(address);
 	}
 
+	/**
+	 * Gets the collision state flag of this NewtonBody when the body is connected to another body
+	 * by a hierarchy of joints.
+	 * @return 1 this body will collide with any linked body | 0 disable collisions with body connected
+	 *         this one by joints
+	 */
 	public int getJointRecursiveCollision() {
 		return Newton.NewtonBodyGetJointRecursiveCollision(address);
 	}
 
+	/**
+	 * Gets the position of the NewtonBody in the NewtonWorld and stores it in
+	 * the provided {@code MemorySegment}. The {@code MemorySegment} should have an equivalent
+	 * layout to the {@code Newton.VEC3F} MemoryLayout.
+	 * @param position {@code MemorySegment} to hold the position
+	 */
 	public void getPosition(MemorySegment position) {
 		Newton.NewtonBodyGetPosition(address, position);
 	}
 
+	/**
+	 * Gets the position of the NewtonBody in the NewtonWorld and returns it in a {@code float[]}.
+	 * The float array will contain the x, y, z of the position in that order.
+	 * @return {@code float[]} containing the body position
+	 */
 	public float[] getPosition() {
 		try (Arena arena = Arena.openConfined()) {
 			MemorySegment posSeg = arena.allocate(Newton.VEC3F);
@@ -622,10 +801,21 @@ public final class NewtonBody {
 		}
 	}
 
+	/**
+	 * Gets the transformation matrix of the NewtonBody and stores it in
+	 * the provided {@code MemorySegment}. The {@code MemorySegment} should have an equivalent
+	 * layout to the {@code Newton.MAT4F} MemoryLayout. The matrix will be stored in column-major order.
+	 * @param matrix {@code MemorySegment} to hold the matrix
+	 */
 	public void getMatrix(MemorySegment matrix) {
 		Newton.NewtonBodyGetMatrix(address, matrix);
 	}
 
+	/**
+	 * Gets the transformation matrix of the NewtonBody and returns it in a {@code float[]}.
+	 * The float array will hold the matrix in column-major order
+	 * @return {@code float[]} containing the body transformation matrix
+	 */
 	public float[] getMatrix() {
 		try (Arena arena = Arena.openConfined()) {
 			MemorySegment matrixSeg = arena.allocate(Newton.MAT4F);
@@ -634,10 +824,21 @@ public final class NewtonBody {
 		}
 	}
 
+	/**
+	 * Gets the rotation part of the transformation matrix as a unit quaternion and stores it
+	 * in the provided {@code MemorySegment}. The {@code MemorySegment} should have an equivalent
+	 * layout to the {@code Newton.VEC4F} MemoryLayout.
+	 * @param rotation {@code MemorySegment} to hold the rotation
+	 */
 	public void getRotation(MemorySegment rotation) {
 		Newton.NewtonBodyGetRotation(address, rotation);
 	}
 
+	/**
+	 * Gets the rotation part of the transformation matrix as a unit quaternion and returns
+	 * it in a {@code float[]}. The float array will contain the x, y, z, w of the rotation in that order.
+	 * @return {@code float[]} containing the rotation
+	 */
 	public float[] getRotation() {
 		try (Arena arena = Arena.openConfined()) {
 			MemorySegment rotSeg = arena.allocate(Newton.VEC4F);
@@ -646,14 +847,24 @@ public final class NewtonBody {
 		}
 	}
 
-	public void getMass(MemorySegment mass) {
-		Newton.NewtonBodyGetMass(address,
-				mass.asSlice(0L, Newton.C_FLOAT.byteSize()),
-				mass.asSlice(4L, Newton.C_FLOAT.byteSize()),
-				mass.asSlice(8L, Newton.C_FLOAT.byteSize()),
-				mass.asSlice(12L, Newton.C_FLOAT.byteSize()));
+	/**
+	 * Gets the mass matrix of the NewtonBody.
+	 * All {@code MemorySegment} parameters should have a layout of {@code Newton.C_FLOAT}.
+	 * @param mass {@code MemorySegment} to hold the mass
+	 * @param Ixx {@code MemorySegment} to hold the moment of inertia for the first principal axis of inertia
+	 * @param Iyy {@code MemorySegment} to hold the moment of inertia for the second principal axis of inertia
+	 * @param Izz {@code MemorySegment} to hold the moment of inertia for the third principal axis of inertia
+	 */
+	public void getMass(MemorySegment mass, MemorySegment Ixx, MemorySegment Iyy, MemorySegment Izz) {
+		Newton.NewtonBodyGetMass(address, mass, Ixx, Iyy, Izz);
 	}
 
+	/**
+	 * Gets the mass matrix of the NewtonBody.
+	 * This method doesn't return a full matrix but the mass and first, second, and third
+	 * principal axis of inertia as four separate floats in the array.
+	 * @return {@code float[]} containing the mass matrix
+	 */
 	public float[] getMass() {
 		try (Arena arena = Arena.openConfined()) {
 			MemorySegment massSeg = arena.allocate(Newton.VEC4F);
@@ -666,14 +877,24 @@ public final class NewtonBody {
 		}
 	}
 
-	public void getInverseMass(MemorySegment invMass) {
-		Newton.NewtonBodyGetInvMass(address,
-				invMass.asSlice(0L, Newton.C_FLOAT.byteSize()),
-				invMass.asSlice(4L, Newton.C_FLOAT.byteSize()),
-				invMass.asSlice(8L, Newton.C_FLOAT.byteSize()),
-				invMass.asSlice(12L, Newton.C_FLOAT.byteSize()));
+	/**
+	 * Gets the inverse mass matrix of the NewtonBody.
+	 * All {@code MemorySegment} parameters should have a layout of {@code Newton.C_FLOAT}.
+	 * @param invMass {@code MemorySegment} to hold the inverse mass
+	 * @param invIxx {@code MemorySegment} to hold the moment of inertia inverse for the first principal axis of inertia
+	 * @param invIyy {@code MemorySegment} to hold the moment of inertia inverse for the second principal axis of inertia
+	 * @param invIzz {@code MemorySegment} to hold the moment of inertia inverse for the third principal axis of inertia
+	 */
+	public void getInverseMass(MemorySegment invMass, MemorySegment invIxx, MemorySegment invIyy, MemorySegment invIzz) {
+		Newton.NewtonBodyGetInvMass(address, invMass, invIxx, invIyy, invIzz);
 	}
 
+	/**
+	 * Gets the inverse mass matrix of the NewtonBody.
+	 * This method doesn't return a full matrix but the mass and first, second, and third
+	 * principal axis of inertia as four separate floats in the array.
+	 * @return {@code float[]} containing the inverse mass matrix
+	 */
 	public float[] getInverseMass() {
 		try (Arena arena = Arena.openConfined()) {
 			MemorySegment massSeg = arena.allocate(Newton.VEC4F);
@@ -686,10 +907,21 @@ public final class NewtonBody {
 		}
 	}
 
+	/**
+	 * Gets the inertia matrix of the NewtonBody and stores it
+	 * in the provided {@code MemorySegment}. The {@code MemorySegment} should have an equivalent
+	 * layout to the {@code Newton.MAT4F} MemoryLayout. The matrix will be stored in column-major order.
+	 * @param matrix {@code MemorySegment} to hold the matrix
+	 */
 	public void getInertiaMatrix(MemorySegment matrix) {
 		Newton.NewtonBodyGetInertiaMatrix(address, matrix);
 	}
 
+	/**
+	 * Gets the inertia matrix of the NewtonBody and returns it in a {@code float[]}.
+	 * The float array will hold the matrix in column-major order.
+	 * @return {@code float[]} containing the body inertia matrix
+	 */
 	public float[] getInertiaMatrix() {
 		try (Arena arena = Arena.openConfined()) {
 			MemorySegment matrixSeg = arena.allocate(Newton.MAT4F);
@@ -698,10 +930,21 @@ public final class NewtonBody {
 		}
 	}
 
+	/**
+	 * Gets the inverse inertia matrix of the NewtonBody and stores it
+	 * in the provided {@code MemorySegment}. The {@code MemorySegment} should have an equivalent
+	 * layout to the {@code Newton.MAT4F} MemoryLayout. The matrix will be stored in column-major order.
+	 * @param matrix {@code MemorySegment} to hold the matrix
+	 */
 	public void getInverseInertiaMatrix(MemorySegment matrix) {
 		Newton.NewtonBodyGetInvInertiaMatrix(address, matrix);
 	}
 
+	/**
+	 * Gets the inverse inertia matrix of the NewtonBody and returns it in a {@code float[]}.
+	 * The float array will hold the matrix in column-major order.
+	 * @return {@code float[]} containing the body inverse inertia matrix
+	 */
 	public float[] getInverseInertiaMatrix() {
 		try (Arena arena = Arena.openConfined()) {
 			MemorySegment matrixSeg = arena.allocate(Newton.MAT4F);
@@ -710,10 +953,21 @@ public final class NewtonBody {
 		}
 	}
 
+	/**
+	 * Gets the global angular velocity of the NewtonBody and stores it
+	 * in the provided {@code MemorySegment}. The {@code MemorySegment} should have an equivalent
+	 * layout to the {@code Newton.VEC3F} MemoryLayout.
+	 * @param omega {@code MemorySegment} to hold the angular velocity
+	 */
 	public void getOmega(MemorySegment omega) {
 		Newton.NewtonBodyGetOmega(address, omega);
 	}
 
+	/**
+	 * Gets the global angular velocity of the NewtonBody and returns it in a {@code float[]}.
+	 * The float array will contain the x, y, z of the angular velocity in that order.
+	 * @return {@code float[]} containing the body angular velocity
+	 */
 	public float[] getOmega() {
 		try (Arena arena = Arena.openConfined()) {
 			MemorySegment omegaSeg = arena.allocate(Newton.VEC3F);
@@ -722,10 +976,21 @@ public final class NewtonBody {
 		}
 	}
 
+	/**
+	 * Gets the global linear velocity of the NewtonBody and stores it
+	 * in the provided {@code MemorySegment}. The {@code MemorySegment} should have an equivalent
+	 * layout to the {@code Newton.VEC3F} MemoryLayout.
+	 * @param velocity {@code MemorySegment} to hold the linear velocity
+	 */
 	public void getVelocity(MemorySegment velocity) {
 		Newton.NewtonBodyGetVelocity(address, velocity);
 	}
 
+	/**
+	 * Gets the global linear velocity of the NewtonBody and returns it in a {@code float[]}.
+	 * The float array will contain the x, y, z of the linear velocity in that order.
+	 * @return {@code float[]} containing the body linear velocity
+	 */
 	public float[] getVelocity() {
 		try (Arena arena = Arena.openConfined()) {
 			MemorySegment velSeg = arena.allocate(Newton.VEC3F);
@@ -734,10 +999,21 @@ public final class NewtonBody {
 		}
 	}
 
+	/**
+	 * Gets the global angular acceleration of the NewtonBody and stores it
+	 * in the provided {@code MemorySegment}. The {@code MemorySegment} should have an equivalent
+	 * layout to the {@code Newton.VEC3F} MemoryLayout.
+	 * @param alpha {@code MemorySegment} to hold the angular acceleration
+	 */
 	public void getAlpha(MemorySegment alpha) {
 		Newton.NewtonBodyGetAlpha(address, alpha);
 	}
 
+	/**
+	 * Gets the global angular acceleration of the NewtonBody and returns it in a {@code float[]}.
+	 * The float array will contain the x, y, z of the angular acceleration in that order.
+	 * @return {@code float[]} containing the body angular acceleration
+	 */
 	public float[] getAlpha() {
 		try (Arena arena = Arena.openConfined()) {
 			MemorySegment alphaSeg = arena.allocate(Newton.VEC3F);
@@ -746,10 +1022,21 @@ public final class NewtonBody {
 		}
 	}
 
+	/**
+	 * Gets the global linear acceleration of the NewtonBody and stores it
+	 * in the provided {@code MemorySegment}. The {@code MemorySegment} should have an equivalent
+	 * layout to the {@code Newton.VEC3F} MemoryLayout.
+	 * @param acceleration {@code MemorySegment} to hold the linear acceleration
+	 */
 	public void getAcceleration(MemorySegment acceleration) {
 		Newton.NewtonBodyGetAcceleration(address, acceleration);
 	}
 
+	/**
+	 * Gets the global linear acceleration of the NewtonBody and returns it in a {@code float[]}.
+	 * The float array will contain the x, y, z of the linear velocity in that order.
+	 * @return {@code float[]} containing the body linear acceleration
+	 */
 	public float[] getAcceleration() {
 		try (Arena arena = Arena.openConfined()) {
 			MemorySegment accSeg = arena.allocate(Newton.VEC3F);
@@ -758,10 +1045,22 @@ public final class NewtonBody {
 		}
 	}
 
+	/**
+	 * Gets the net force applied to the NewtonBody after the last {@code NewtonWorld.update()} and
+	 * stores it in the provided {@code MemorySegment}. The {@code MemorySegment} should have an equivalent
+	 * layout to the {@code Newton.VEC3F} MemoryLayout.
+	 * @param force {@code MemorySegment} to hold the applied net force
+	 */
 	public void getForce(MemorySegment force) {
 		Newton.NewtonBodyGetForce(address, force);
 	}
 
+	/**
+	 * Gets the net force applied to the NewtonBody after the last {@code NewtonWorld.update()} and
+	 * returns it in a {@code float[]}. The float array will contain the x, y, z of the applied net force
+	 * in that order.
+	 * @return {@code float[]} containing the applied net force
+	 */
 	public float[] getForce() {
 		try (Arena arena = Arena.openConfined()) {
 			MemorySegment forceSeg = arena.allocate(Newton.VEC3F);
@@ -770,10 +1069,22 @@ public final class NewtonBody {
 		}
 	}
 
+	/**
+	 * Gets the net torque applied to the NewtonBody after the last {@code NewtonWorld.update()} and
+	 * stores it in the provided {@code MemorySegment}. The {@code MemorySegment} should have an equivalent
+	 * layout to the {@code Newton.VEC3F} MemoryLayout.
+	 * @param torque {@code MemorySegment} to hold the applied net torque
+	 */
 	public void getTorque(MemorySegment torque) {
 		Newton.NewtonBodyGetTorque(address, torque);
 	}
 
+	/**
+	 * Gets the net torque applied to the NewtonBody after the last {@code NewtonWorld.update()} and
+	 * returns it in a {@code float[]}. The float array will contain the x, y, z of the applied net torque
+	 * in that order.
+	 * @return {@code float[]} containing the applied net torque
+	 */
 	public float[] getTorque() {
 		try (Arena arena = Arena.openConfined()) {
 			MemorySegment torqueSeg = arena.allocate(Newton.VEC3F);
@@ -782,10 +1093,22 @@ public final class NewtonBody {
 		}
 	}
 
+	/**
+	 * Gets the relative position of the center of mass of the NewtonBody and
+	 * stores it in the provided {@code MemorySegment}. The {@code MemorySegment} should have an equivalent
+	 * layout to the {@code Newton.VEC3F} MemoryLayout.
+	 * @param center {@code MemorySegment} to hold the applied net torque
+	 */
 	public void getCenterOfMass(MemorySegment center) {
 		Newton.NewtonBodyGetCentreOfMass(address, center);
 	}
 
+	/**
+	 * Gets the relative position of the center of mass of the NewtonBody and
+	 * returns it in a {@code float[]}. The float array will contain the x, y, z of the center of mass
+	 * in that order.
+	 * @return {@code float[]} containing the center of mass
+	 */
 	public float[] getCenterOfMass() {
 		try (Arena arena = Arena.openConfined()) {
 			MemorySegment comSeg = arena.allocate(Newton.VEC3F);
@@ -794,6 +1117,11 @@ public final class NewtonBody {
 		}
 	}
 
+	/**
+	 *
+	 * @param point
+	 * @param velocity
+	 */
 	public void getPointVelocity(MemorySegment point, MemorySegment velocity) {
 		Newton.NewtonBodyGetPointVelocity(address, point, velocity);
 	}
@@ -894,10 +1222,5 @@ public final class NewtonBody {
 
 	public void destroy() {
 		Newton.NewtonDestroyBody(address);
-	}
-	
-	public static NewtonBody wrap(MemorySegment address) {
-		int bodyType = Newton.NewtonBodyGetType(address);
-		return new NewtonBody(address, bodyType);
 	}
 }

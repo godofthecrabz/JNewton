@@ -6,22 +6,9 @@ import crab.newton.callbacks.NewtonSerializeCallback;
 import crab.newton.internal.*;
 import java.lang.foreign.*;
 
-public class NewtonMesh {
+public record NewtonMesh(MemorySegment address) {
 	
-	protected final MemorySegment address;
-	
-	protected NewtonMesh(MemorySegment address) {
-		this.address = address;
-	}
-	
-	/**
-	 * Creates a new {@code NewtonMesh}
-	 * @param world - {@code NewtonWorld} to allocate NewtonMesh
-	 * @return new {@code NewtonMesh}
-	 */
-	public static NewtonMesh create(NewtonWorld world) {
-		return new NewtonMesh(Newton.NewtonMeshCreate(world.address));
-	}
+	public NewtonMesh {}
 	
 	/**
 	 * Create a new {@code NewtonMesh} from an existing mesh

@@ -3,7 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/JNewton.iml" filepath="$PROJECT_DIR$/JNewton.iml" />
-      <module fileurl="file://$PROJECT_DIR$/JNewton-Windows_x64/JNewton-Windows_x64.iml" filepath="$PROJECT_DIR$/JNewton-Windows_x64/JNewton-Windows_x64.iml" />
+      <module fileurl="file://$PROJECT_DIR$/JNewton_Windows_x64/JNewton-Windows_x64.iml" filepath="$PROJECT_DIR$/JNewton_Windows_x64/JNewton-Windows_x64.iml" />
     </modules>
   </component>
 </project>

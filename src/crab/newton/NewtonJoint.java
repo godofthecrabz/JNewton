@@ -2,13 +2,9 @@ package crab.newton;
 
 import java.lang.foreign.MemorySegment;
 
-public class NewtonJoint {
+public record NewtonJoint(MemorySegment address) {
 	
-	protected final MemorySegment address;
-	
-	protected NewtonJoint(MemorySegment address) {
-		this.address = address;
-	}
+	public NewtonJoint {}
 	
 	public float getContactPruningTolerance() {
 		return Newton.NewtonMaterialGetContactPruningTolerance(address);

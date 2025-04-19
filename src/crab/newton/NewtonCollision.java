@@ -6,7 +6,7 @@ import crab.newton.callbacks.NewtonTreeCollisionFaceCallback;
 
 import java.lang.foreign.*;
 
-public final class NewtonCollision {
+public record NewtonCollision(MemorySegment address, int collisionType) {
 
 	public static final int SPHERE = 0,
 			CAPSULE = 1,
@@ -24,17 +24,12 @@ public final class NewtonCollision {
 			USERMESH = 13,
 			SCENE = 14,
 			FRACTURED_COMPOUND = 15;
-	protected final MemorySegment address;
-	public final int collisionType;
 
-	protected NewtonCollision(MemorySegment address) {
+	public NewtonCollision(MemorySegment address) {
 		this(address, Newton.NewtonCollisionGetType(address));
 	}
 
-	protected NewtonCollision(MemorySegment address, int collisionType) {
-		this.address = address;
-		this.collisionType = collisionType;
-	}
+	public NewtonCollision {}
 
 	@Override
 	public boolean equals(Object object) {
@@ -105,7 +100,7 @@ public final class NewtonCollision {
 
 	public NewtonCollision getParentInstance() {
 		MemorySegment ptr = Newton.NewtonCollisionGetParentInstance(address);
-		return ptr.equals(MemorySegment.NULL) ? null : NewtonCollision.wrap(ptr);
+		return ptr.equals(MemorySegment.NULL) ? null : new NewtonCollision(ptr);
 	}
 
 	public void setMatrix(MemorySegment matrix) {
@@ -249,8 +244,8 @@ public final class NewtonCollision {
 
 	public NewtonCollision getCollisionFromNode(MemorySegment collisionNode) {
 		return switch (collisionType) {
-			case COMPOUND -> NewtonCollision.wrap(Newton.NewtonCompoundCollisionGetCollisionFromNode(address, collisionNode));
-			case SCENE -> NewtonCollision.wrap(Newton.NewtonSceneCollisionGetCollisionFromNode(address, collisionNode));
+			case COMPOUND -> new NewtonCollision(Newton.NewtonCompoundCollisionGetCollisionFromNode(address, collisionNode));
+			case SCENE -> new NewtonCollision(Newton.NewtonSceneCollisionGetCollisionFromNode(address, collisionNode));
 			default -> throw new RuntimeException("Collision Type incompatible with this method");
 		};
 	}
@@ -359,16 +354,11 @@ public final class NewtonCollision {
 		Newton.NewtonTreeCollisionForEachFace(address, callback, context);
 	}
 
-	public void forEachFace(NewtonTreeCollisionFaceCallback forEachFaceCallback, MemorySegment context, SegmentScope scope) {
+	public void forEachFace(NewtonTreeCollisionFaceCallback forEachFaceCallback, MemorySegment context, MemorySegment.Scope scope) {
 		if (collisionType != TREE) {
 			throw new RuntimeException("Collision Type incompatible with this method");
 		}
 		MemorySegment forEachFunc = NewtonTreeCollisionFaceCallback.allocate(forEachFaceCallback, scope);
 		Newton.NewtonTreeCollisionForEachFace(address, forEachFunc, context);
-	}
-	
-	public static NewtonCollision wrap(MemorySegment address) {
-		int collisionType = Newton.NewtonCollisionGetType(address);
-		return new NewtonCollision(address, collisionType);
 	}
 }

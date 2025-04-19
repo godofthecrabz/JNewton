@@ -23,6 +23,7 @@ public final class RuntimeHelper {
     private static final MethodHandles.Lookup MH_LOOKUP = MethodHandles.lookup();
     private static SymbolLookup SYMBOL_LOOKUP;
     private static Arena LOOKUP_ARENA;
+    private static Thread OWNER;
     private static final SegmentAllocator THROWING_ALLOCATOR = (x, y) -> { throw new AssertionError("should not reach here"); };
 
     final static SegmentAllocator CONSTANT_ALLOCATOR =
@@ -40,18 +41,21 @@ public final class RuntimeHelper {
     }
 
     public static void loadLibrary(String filename) {
-        LOOKUP_ARENA = Arena.openConfined();
+        LOOKUP_ARENA = Arena.openShared();
+        OWNER = Thread.currentThread();
         SYMBOL_LOOKUP = SymbolLookup.libraryLookup(filename, LOOKUP_ARENA.scope());
     }
 
     public static void loadLibrary(Path filepath) {
-        LOOKUP_ARENA = Arena.openConfined();
+        LOOKUP_ARENA = Arena.openShared();
+        OWNER = Thread.currentThread();
         SYMBOL_LOOKUP = SymbolLookup.libraryLookup(filepath, LOOKUP_ARENA.scope());
     }
 
     public static void unloadLibrary() {
-        if (LOOKUP_ARENA.isCloseableBy(Thread.currentThread())) {
+        if (OWNER.equals(Thread.currentThread())) {
             LOOKUP_ARENA.close();
+            OWNER = null;
         }
     }
 

@@ -2,24 +2,20 @@ package crab.newton;
 
 import java.lang.foreign.*;
 
-public class NewtonCollisionAggregate {
-	
-	protected final MemorySegment address;
+public record NewtonCollisionAggregate(MemorySegment address) {
 
-	protected NewtonCollisionAggregate(MemorySegment address) {
-		this.address = address;
-	}
+	public NewtonCollisionAggregate{}
 	
 	public void destroy() {
 		Newton.NewtonCollisionAggregateDestroy(address);
 	}
 	
 	public void addBody(NewtonBody body) {
-		Newton.NewtonCollisionAggregateAddBody(address, body.address);
+		Newton.NewtonCollisionAggregateAddBody(address, body.address());
 	}
 	
 	public void removeBody(NewtonBody body) {
-		Newton.NewtonCollisionAggregateRemoveBody(address, body.address);
+		Newton.NewtonCollisionAggregateRemoveBody(address, body.address());
 	}
 	
 	public int getSelfCollision() {

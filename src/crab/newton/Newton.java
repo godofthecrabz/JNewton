@@ -24,11 +24,31 @@ public class Newton  {
     public static final OfFloat C_FLOAT = Constants$root.C_FLOAT$LAYOUT;
     public static final OfDouble C_DOUBLE = Constants$root.C_DOUBLE$LAYOUT;
     public static final OfAddress C_POINTER = Constants$root.C_POINTER$LAYOUT;
-    public static final SequenceLayout VEC3F = MemoryLayout.sequenceLayout(3, C_FLOAT);
-    public static final SequenceLayout VEC3D = MemoryLayout.sequenceLayout(3, C_DOUBLE);
-    public static final SequenceLayout VEC4F = MemoryLayout.sequenceLayout(4, C_FLOAT);
-    public static final SequenceLayout AABBF = MemoryLayout.sequenceLayout(6, C_FLOAT);
-    public static final SequenceLayout MAT4F = MemoryLayout.sequenceLayout(16, C_FLOAT);
+    public static final StructLayout VEC3F = MemoryLayout.structLayout(
+            C_FLOAT.withName("x"),
+            C_FLOAT.withName("y"),
+            C_FLOAT.withName("z")
+    );
+    public static final StructLayout VEC3D = MemoryLayout.structLayout(
+            C_DOUBLE.withName("x"),
+            C_DOUBLE.withName("y"),
+            C_DOUBLE.withName("z")
+    );
+    public static final StructLayout VEC4F = MemoryLayout.structLayout(
+            C_FLOAT.withName("x"),
+            C_FLOAT.withName("y"),
+            C_FLOAT.withName("z"),
+            C_FLOAT.withName("w")
+    );
+    public static final StructLayout AABBF = MemoryLayout.structLayout(
+            VEC3F.withName("p0"), VEC3F.withName("p1")
+    );
+    public static final StructLayout MAT4F = MemoryLayout.structLayout(
+            VEC4F.withName("col0"),
+            VEC4F.withName("col1"),
+            VEC4F.withName("col2"),
+            VEC4F.withName("col3")
+    );
     public static final StructLayout MAT4F_VEC3F = MemoryLayout.structLayout(
             MAT4F, VEC3F
     );
@@ -38,6 +58,10 @@ public class Newton  {
     }
     public static void loadNewton(Path newtonPath) {
         RuntimeHelper.loadLibrary(newtonPath);
+    }
+
+    public static void unloadNewton() {
+        RuntimeHelper.unloadLibrary();
     }
     /**
      * {@snippet :
